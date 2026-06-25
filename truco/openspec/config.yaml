@@ -1,0 +1,54 @@
+schema: spec-driven
+
+context: |
+  Project: Truco Lab — Argentine Truco trainer/game for React Native Web (portfolio).
+  Status: Phases 1–2 complete — Expo SDK 56, design system (tokens, fonts, UI primitives, layout helpers).
+  Stack: Expo SDK 54+, Yarn, TypeScript strict, Expo Router, Biome, jest-expo.
+  Architecture: Domain-driven — src/domain (pure rules), src/features, src/shared.
+  i18n: es + en menus; game jargon always Spanish (truco, envido, suits).
+  Deploy: Vercel static export (expo export -p web).
+  Design: Nocturnal Bodegón tokens in docs/design-tokens.md (Stitch folder excluded).
+  Docs: docs/backlog.md — 12 phases; MVP = phases 1–9; 10–12 post-MVP.
+
+rules:
+  proposal:
+    - Document stack choices with rationale and alternatives considered
+    - Align with docs/backlog.md Phase 1 scope
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Separate domain logic from UI (testable game engine)
+    - Document folder structure and path aliases
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    tdd: false
+    test_command: "yarn test"
+  verify:
+    test_command: "yarn test"
+    build_command: "yarn typecheck && yarn lint && yarn web:export"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+strict_tdd: false
+
+testing:
+  strict_tdd: false
+  detected: "2026-06-24"
+  test_runner:
+    command: "yarn test"
+    framework: "jest-expo"
+  layers:
+    unit: true
+    integration: false
+    e2e: false
+  coverage:
+    available: false
+    command: ""
+  quality:
+    linter: true
+    type_checker: true
+    formatter: true

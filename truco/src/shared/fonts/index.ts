@@ -1,0 +1,1 @@
+export { FontGate } from "./FontGate";

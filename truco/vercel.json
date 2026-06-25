@@ -1,0 +1,5 @@
+{
+  "buildCommand": "yarn web:export",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

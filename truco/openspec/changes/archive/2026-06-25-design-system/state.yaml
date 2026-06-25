@@ -1,0 +1,41 @@
+change: design-system
+status: archived
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: complete
+
+depends_on:
+  - project-setup
+
+decisions:
+  visual_direction: nocturnal-bodegon-cozy-truco
+  styling: stylesheet-theme-tokens
+  fonts: expo-google-fonts
+  refactor_skill: rn-refactor
+  expo_skills:
+    - building-native-ui
+    - expo-ui
+  apply_slices:
+    - tokens-fonts-screen-button
+    - card-pill-scorebadge-layout-refactors
+
+apply_completed:
+  - tokens-fonts-screen-button
+  - card-pill-scorebadge-layout-refactors
+
+verification:
+  date: "2026-06-25"
+  runner: local
+  results:
+    typecheck: pass
+    lint: pass
+    test: pass
+    web_export: pass
+
+archived: "2026-06-25"

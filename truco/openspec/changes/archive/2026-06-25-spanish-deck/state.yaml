@@ -1,0 +1,26 @@
+change: spanish-deck
+status: archived
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: complete
+
+depends_on:
+  - design-system
+
+delivery:
+  strategy: single-pr
+  review_budget_lines: 400
+
+archived:
+  date: "2026-06-25"
+  specs_synced:
+    - spanish-deck/spec.md
+    - design-tokens/spec.md (delta merged)
+  tasks_complete: 24
+  verification: pass_with_warnings

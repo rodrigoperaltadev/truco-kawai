@@ -1,0 +1,34 @@
+change: project-setup
+status: archived
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: complete
+
+decisions:
+  deploy: vercel
+  package_manager: yarn
+  i18n: es-en-menus-spanish-jargon
+  stitch_folder: exclude
+  phase1_expanded: placeholder-routes-i18n-vercel
+
+verification:
+  date: "2026-06-25"
+  runner: local
+  results:
+    typecheck: pass
+    lint: pass
+    test: pass
+    web_export: pass
+
+archived: "2026-06-25"
+archived_to: openspec/changes/archive/2026-06-25-project-setup/
+specs_synced:
+  - app-shell
+  - project-tooling
+  - web-deploy
