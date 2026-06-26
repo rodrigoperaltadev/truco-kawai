@@ -1,7 +1,9 @@
 import { cardId } from "@/domain/deck";
+import { acceptCall, makeCall } from "@/domain/game/calls";
 import { playCard } from "@/domain/game/play";
 import { emptyCallState } from "@/domain/game/match";
 import type {
+  CallState,
   HandState,
   MatchState,
   PlayCardCmd,
@@ -146,6 +148,38 @@ describe("playCard — validations", () => {
     const cmd: PlayCardCmd = { playerId: "B", card: { suit: "basto", rank: 2 } };
     playCard(state, cmd);
     expect(state).toEqual(snapshot);
+  });
+
+  it("rejects play when a call is pending (CALL_PENDING)", () => {
+    const pendingCallState: CallState = {
+      pendingCall: { caller: "A", level: "truco", status: "pending" },
+      acceptedLevel: null,
+      history: [{ caller: "A", level: "truco", action: "issued", resolvedAt: 1 }],
+    };
+    const state = buildState({
+      currentTurn: "B",
+      hand: { ...buildState().hand, callState: pendingCallState },
+    });
+    const cmd: PlayCardCmd = { playerId: "B", card: { suit: "basto", rank: 2 } };
+    const res = playCard(state, cmd);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toBe("CALL_PENDING");
+  });
+
+  it("CALL_PENDING takes priority over OUT_OF_TURN", () => {
+    const pendingCallState: CallState = {
+      pendingCall: { caller: "A", level: "truco", status: "pending" },
+      acceptedLevel: null,
+      history: [],
+    };
+    const state = buildState({
+      currentTurn: "A", // wrong turn for B, but CALL_PENDING fires first
+      hand: { ...buildState().hand, callState: pendingCallState },
+    });
+    const cmd: PlayCardCmd = { playerId: "B", card: { suit: "basto", rank: 2 } };
+    const res = playCard(state, cmd);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toBe("CALL_PENDING");
   });
 });
 
@@ -323,5 +357,77 @@ describe("playCard — valid plays", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.state.currentTurn).toBe("B");
+  });
+});
+
+// ── playCard — call interaction ───────────────────────────────────────
+
+describe("playCard — call interaction", () => {
+  it("blocks play while call is pending, resumes after accept", () => {
+    let state = buildFullHandState();
+
+    // A calls truco
+    const callRes = makeCall(state, "A", "truco");
+    expect(callRes.ok).toBe(true);
+    if (!callRes.ok) return;
+    state = callRes.state;
+
+    // B tries to play — should be blocked
+    const pB = state.hand.players.find((p) => p.playerId === "B");
+    if (pB === undefined) throw new Error("Expected B");
+    const cardB = pB.cards[0];
+    if (cardB === undefined) throw new Error("Expected card");
+    const blocked = playCard(state, { playerId: "B", card: cardB });
+    expect(blocked.ok).toBe(false);
+    if (!blocked.ok) expect(blocked.error).toBe("CALL_PENDING");
+
+    // B accepts
+    const acceptRes = acceptCall(state, "B");
+    expect(acceptRes.ok).toBe(true);
+    if (!acceptRes.ok) return;
+    state = acceptRes.state;
+
+    // Now A (caller) can play
+    const pA = state.hand.players.find((p) => p.playerId === "A");
+    if (pA === undefined) throw new Error("Expected A");
+    const cardA = pA.cards[0];
+    if (cardA === undefined) throw new Error("Expected card");
+    const resumed = playCard(state, { playerId: "A", card: cardA });
+    expect(resumed.ok).toBe(true);
+  });
+
+  it("call timing: mano can call before playing in round 1", () => {
+    const state = buildFullHandState();
+    // Round 1, no cards played yet — mano (A) calls truco
+    expect(state.hand.rounds[0]?.trick.cardsPlayed).toHaveLength(0);
+    const res = makeCall(state, "A", "truco");
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    // Turn transfers to B (opponent responds)
+    expect(res.state.currentTurn).toBe("B");
+    // A's cards are untouched
+    const pA = res.state.hand.players.find((p) => p.playerId === "A");
+    expect(pA?.cards).toHaveLength(3);
+  });
+
+  it("call timing: opponent can call after mano plays (same round)", () => {
+    let state = buildFullHandState();
+    // A plays first card
+    const pA = state.hand.players[0];
+    if (pA === undefined) throw new Error("Expected A");
+    const cardA = pA.cards[0];
+    if (cardA === undefined) throw new Error("Expected card");
+    const playRes = playCard(state, { playerId: "A", card: cardA });
+    expect(playRes.ok).toBe(true);
+    if (!playRes.ok) return;
+    state = playRes.state;
+
+    // Now it's B's turn, B hasn't played yet — B calls truco
+    expect(state.hand.rounds[0]?.trick.cardsPlayed).toHaveLength(1);
+    const callRes = makeCall(state, "B", "truco");
+    expect(callRes.ok).toBe(true);
+    if (!callRes.ok) return;
+    // Turn transfers back to A (opponent responds)
+    expect(callRes.state.currentTurn).toBe("A");
   });
 });
