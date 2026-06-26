@@ -1,6 +1,7 @@
 import { cardId, createDeck, deal, shuffle } from "@/domain/deck";
 import { startHandRoles } from "./turn";
 import type {
+  CallState,
   CreateMatchOptions,
   HandState,
   MatchState,
@@ -14,6 +15,13 @@ import type {
 
 const VALID_POINTS: readonly PointsToWin[] = [15, 30];
 const HAND_SIZE = 3;
+
+/**
+ * Returns an empty CallState for a new hand.
+ */
+export function emptyCallState(): CallState {
+  return { pendingCall: null, acceptedLevel: null, history: [] };
+}
 
 /**
  * Creates a new match state with the given players and points-to-win.
@@ -111,14 +119,21 @@ export function dealHand(
     mano,
     players: playerHands,
     rounds: [initialRound],
+    callState: emptyCallState(),
   };
 }
 
 /**
  * Resolves match scoring after a hand is won.
+ * When pointsOverride is provided (rejection path), uses that value.
+ * Otherwise awards 1 point (default hand win; PR 2 will derive from callState).
  * Returns updated MatchState with incremented score or matchOver if pointsToWin reached.
  */
-export function resolveMatch(state: MatchState, handWinnerId: string): MatchState {
+export function resolveMatch(
+  state: MatchState,
+  handWinnerId: string,
+  pointsOverride?: number,
+): MatchState {
   const teamIdx = state.teams.findIndex((team) => {
     const player = team.players[0];
     return player !== undefined && player.id === handWinnerId;
@@ -133,7 +148,8 @@ export function resolveMatch(state: MatchState, handWinnerId: string): MatchStat
     throw new Error("Expected winning team");
   }
 
-  const newScore = winningTeam.score + 1;
+  const points = pointsOverride ?? 1;
+  const newScore = winningTeam.score + points;
   const team0 = state.teams[0];
   const team1 = state.teams[1];
   if (team0 === undefined || team1 === undefined) {
