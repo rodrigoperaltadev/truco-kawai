@@ -1,0 +1,21 @@
+change: core-truco-engine
+status: archived
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: complete
+
+depends_on:
+  - spanish-deck
+
+delivery:
+  strategy: ask-on-risk
+  chain_strategy: stacked-to-main
+  review_budget_lines: 400
+  current_slice: 3
+  total_slices: 3
