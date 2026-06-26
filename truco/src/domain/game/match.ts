@@ -1,4 +1,5 @@
 import { cardId, createDeck, deal, shuffle } from "@/domain/deck";
+import { callPoints } from "./calls";
 import { startHandRoles } from "./turn";
 import type {
   CallState,
@@ -126,7 +127,7 @@ export function dealHand(
 /**
  * Resolves match scoring after a hand is won.
  * When pointsOverride is provided (rejection path), uses that value.
- * Otherwise awards 1 point (default hand win; PR 2 will derive from callState).
+ * Otherwise derives points from callState.acceptedLevel (null → 1, truco → 2, etc.).
  * Returns updated MatchState with incremented score or matchOver if pointsToWin reached.
  */
 export function resolveMatch(
@@ -148,7 +149,7 @@ export function resolveMatch(
     throw new Error("Expected winning team");
   }
 
-  const points = pointsOverride ?? 1;
+  const points = pointsOverride ?? callPoints(state.hand.callState.acceptedLevel);
   const newScore = winningTeam.score + points;
   const team0 = state.teams[0];
   const team1 = state.teams[1];
