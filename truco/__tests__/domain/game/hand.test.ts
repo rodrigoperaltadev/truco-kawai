@@ -1,5 +1,6 @@
 import { resolveHand } from "@/domain/game/hand";
 import type { HandState, RoundState } from "@/domain/game/types";
+import { emptyCallState } from "@/domain/game/match";
 
 function resolvedTrick(winner: string | "tie") {
   return { cardsPlayed: [], winner, resolved: true };
@@ -19,6 +20,7 @@ function makeHand(rounds: RoundState[], mano = "A"): HandState {
       { playerId: "B", cards: [] },
     ],
     rounds,
+    callState: emptyCallState(),
   };
 }
 
