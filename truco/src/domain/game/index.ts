@@ -21,3 +21,9 @@ export type {
 export { createMatch, resolveMatch, dealHand } from "./match";
 
 export { startHandRoles, nextRoundLeader, currentTurn } from "./turn";
+
+export { resolveTrick } from "./trick";
+
+export { resolveHand } from "./hand";
+
+export { playCard } from "./play";
