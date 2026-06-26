@@ -13,6 +13,13 @@ export type {
   MatchState,
   CreateMatchOptions,
   PlayCardCmd,
+  CallType,
+  CallStatus,
+  CallAction,
+  PendingCall,
+  CallHistoryEntry,
+  CallState,
+  GameError,
   PlayError,
   Result,
   CPUPlayer,
@@ -27,3 +34,5 @@ export { resolveTrick } from "./trick";
 export { resolveHand } from "./hand";
 
 export { playCard } from "./play";
+
+export { makeCall, acceptCall, rejectCall, callPoints, nextLevel } from "./calls";

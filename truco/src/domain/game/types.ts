@@ -43,6 +43,7 @@ export type HandState = Readonly<{
   mano: string;
   players: readonly [PlayerHand, PlayerHand];
   rounds: readonly RoundState[];
+  callState: CallState;
 }>;
 
 export type MatchState = Readonly<{
@@ -59,6 +60,7 @@ export type CreateMatchOptions = Readonly<{
   players: readonly [Player, Player];
   pointsToWin: PointsToWin;
   rng?: () => number;
+  florEnabled?: boolean;
 }>;
 
 export type PlayCardCmd = Readonly<{
@@ -66,11 +68,48 @@ export type PlayCardCmd = Readonly<{
   card: Card;
 }>;
 
-export type PlayError = "OUT_OF_TURN" | "CARD_NOT_IN_HAND" | "CARD_ALREADY_PLAYED" | "MATCH_OVER";
+// ── Call escalation types ─────────────────────────────────────────────
+
+export type CallType = "truco" | "retruco" | "vale_cuatro";
+export type CallStatus = "pending" | "accepted" | "rejected";
+export type CallAction = "issued" | "accepted" | "rejected";
+
+export type PendingCall = Readonly<{
+  caller: string;
+  level: CallType;
+  status: CallStatus;
+}>;
+
+export type CallHistoryEntry = Readonly<{
+  caller: string;
+  level: CallType;
+  action: CallAction;
+  resolvedAt: number;
+}>;
+
+export type CallState = Readonly<{
+  pendingCall: PendingCall | null;
+  acceptedLevel: CallType | null;
+  history: readonly CallHistoryEntry[];
+}>;
+
+// ── Error types ───────────────────────────────────────────────────────
+
+export type GameError =
+  | "MATCH_OVER"
+  | "CALL_PENDING"
+  | "OUT_OF_TURN"
+  | "CARD_NOT_IN_HAND"
+  | "CARD_ALREADY_PLAYED"
+  | "INVALID_CALL_LEVEL"
+  | "CALL_ALREADY_PENDING"
+  | "CALL_WINDOW_CLOSED";
+
+export type PlayError = GameError;
 
 export type Result<T> =
   | Readonly<{ ok: true; state: T }>
-  | Readonly<{ ok: false; error: PlayError }>;
+  | Readonly<{ ok: false; error: GameError }>;
 
 export interface CPUPlayer {
   chooseCard(hand: readonly Card[], state: MatchState): Card;
