@@ -1,6 +1,6 @@
 import { resolveHand } from "@/domain/game/hand";
-import type { HandState, RoundState } from "@/domain/game/types";
 import { emptyCallState } from "@/domain/game/match";
+import type { HandState, RoundState } from "@/domain/game/types";
 
 function resolvedTrick(winner: string | "tie") {
   return { cardsPlayed: [], winner, resolved: true };

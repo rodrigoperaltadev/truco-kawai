@@ -1,12 +1,5 @@
 import { resolveMatch } from "./match";
-import type {
-  CallHistoryEntry,
-  CallState,
-  CallType,
-  HandState,
-  MatchState,
-  Result,
-} from "./types";
+import type { CallHistoryEntry, CallState, CallType, HandState, MatchState, Result } from "./types";
 
 /**
  * Returns the point value for a given call level.
