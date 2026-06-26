@@ -2,6 +2,7 @@ import { acceptCall, callPoints, makeCall, nextLevel, rejectCall } from "@/domai
 import { emptyCallState } from "@/domain/game/match";
 import type {
   CallState,
+  CallType,
   HandState,
   MatchState,
   Player,
@@ -156,6 +157,14 @@ describe("makeCall — validations", () => {
   it("rejects vale_cuatro with no accepted retruco", () => {
     const state = buildMatchState({ currentTurn: "A" });
     const res = makeCall(state, "A", "vale_cuatro");
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toBe("INVALID_CALL_LEVEL");
+  });
+
+  it("rejects unsupported call level (flor disabled by default)", () => {
+    const state = buildMatchState({ currentTurn: "A" });
+    // "flor" is not part of CallType; cast to exercise the runtime INVALID_CALL_LEVEL branch
+    const res = makeCall(state, "A", "flor" as CallType);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toBe("INVALID_CALL_LEVEL");
   });

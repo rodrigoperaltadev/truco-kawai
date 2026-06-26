@@ -1,0 +1,14 @@
+change: truco-calls
+status: exploring
+phases:
+  explore: in_progress
+  propose: pending
+  spec: pending
+  design: pending
+  tasks: pending
+  apply: pending
+  verify: pending
+  archive: pending
+
+depends_on:
+  - core-truco-engine

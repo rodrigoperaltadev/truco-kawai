@@ -1,4 +1,5 @@
 import { cardId } from "@/domain/deck";
+import { acceptCall, makeCall, rejectCall } from "@/domain/game/calls";
 import { createMatch } from "@/domain/game/match";
 import { playCard } from "@/domain/game/play";
 import type { Card, MatchState, PlayCardCmd, Player } from "@/domain/game/types";
@@ -282,5 +283,111 @@ describe("Integration — state immutability", () => {
         break;
       }
     }
+  });
+});
+
+// ── Integration — full call chain ─────────────────────────────────────
+
+describe("Integration — truco → accept → retruco → reject chain", () => {
+  it("full escalation: truco accepted, retruco rejected, caller gets 2 pts", () => {
+    const rng = createSeededRng(42);
+    let state = createMatch({
+      players: [playerA, playerB],
+      pointsToWin: 15,
+      rng,
+    });
+
+    // A (mano) calls truco
+    expect(state.currentTurn).toBe(playerA.id);
+    const r1 = makeCall(state, playerA.id, "truco");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    state = r1.state;
+    expect(state.hand.callState.pendingCall?.level).toBe("truco");
+    expect(state.hand.callState.pendingCall?.status).toBe("pending");
+    expect(state.currentTurn).toBe(playerB.id);
+
+    // B accepts
+    const r2 = acceptCall(state, playerB.id);
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    state = r2.state;
+    expect(state.hand.callState.acceptedLevel).toBe("truco");
+    expect(state.currentTurn).toBe(playerA.id);
+
+    // A plays a card (now that call is resolved)
+    const pA = state.hand.players.find((p) => p.playerId === playerA.id);
+    if (pA === undefined) throw new Error("Expected A");
+    const cardA = pA.cards[0];
+    if (cardA === undefined) throw new Error("Expected card");
+    const r3 = playCard(state, { playerId: playerA.id, card: cardA });
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    state = r3.state;
+
+    // B calls retruco (after A played, it's B's turn)
+    expect(state.currentTurn).toBe(playerB.id);
+    const r4 = makeCall(state, playerB.id, "retruco");
+    expect(r4.ok).toBe(true);
+    if (!r4.ok) return;
+    state = r4.state;
+    expect(state.hand.callState.pendingCall?.level).toBe("retruco");
+    expect(state.currentTurn).toBe(playerA.id);
+
+    // A rejects — B's team (caller) gets 2 pts (callPoints("truco"))
+    const r5 = rejectCall(state, playerA.id);
+    expect(r5.ok).toBe(true);
+    if (!r5.ok) return;
+    state = r5.state;
+
+    // B's team scored 2 points
+    const teamB = state.teams.find((t) => t.id === `team-${playerB.id}`);
+    expect(teamB?.score).toBe(2);
+
+    // History was reset (new hand dealt)
+    expect(state.hand.callState.history).toHaveLength(0);
+    expect(state.hand.callState.pendingCall).toBeNull();
+    expect(state.hand.callState.acceptedLevel).toBeNull();
+
+    // New hand started
+    expect(state.hand.handNumber).toBe(2);
+  });
+
+  it("playCard is blocked during pending call in integration", () => {
+    const rng = createSeededRng(42);
+    let state = createMatch({
+      players: [playerA, playerB],
+      pointsToWin: 15,
+      rng,
+    });
+
+    // A calls truco
+    const r1 = makeCall(state, playerA.id, "truco");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    state = r1.state;
+
+    // B tries to play — blocked
+    const pB = state.hand.players.find((p) => p.playerId === playerB.id);
+    if (pB === undefined) throw new Error("Expected B");
+    const cardB = pB.cards[0];
+    if (cardB === undefined) throw new Error("Expected card");
+    const blocked = playCard(state, { playerId: playerB.id, card: cardB });
+    expect(blocked.ok).toBe(false);
+    if (!blocked.ok) expect(blocked.error).toBe("CALL_PENDING");
+
+    // B accepts, then can play
+    const r2 = acceptCall(state, playerB.id);
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    state = r2.state;
+
+    // Now A plays (caller's turn after accept)
+    const pA = state.hand.players.find((p) => p.playerId === playerA.id);
+    if (pA === undefined) throw new Error("Expected A");
+    const cardA = pA.cards[0];
+    if (cardA === undefined) throw new Error("Expected card");
+    const resumed = playCard(state, { playerId: playerA.id, card: cardA });
+    expect(resumed.ok).toBe(true);
   });
 });

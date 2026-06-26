@@ -1,6 +1,6 @@
 import { cardId } from "@/domain/deck";
-import { createMatch, resolveMatch } from "@/domain/game";
-import type { MatchState, Player } from "@/domain/game";
+import { createMatch, dealHand, resolveMatch } from "@/domain/game";
+import type { CallState, MatchState, Player } from "@/domain/game";
 
 const playerA: Player = { id: "player-a", name: "Alice" };
 const playerB: Player = { id: "player-b", name: "Bob" };
@@ -206,5 +206,138 @@ describe("resolveMatch", () => {
     });
 
     expect(() => resolveMatch(state, "unknown-player")).toThrow(/not found in any team/);
+  });
+});
+
+describe("resolveMatch — scoring from callState", () => {
+  it("awards 1 point when acceptedLevel is null (no calls)", () => {
+    const state = createMatch({
+      players: [playerA, playerB],
+      pointsToWin: 15,
+      rng: seededRng(),
+    });
+    // callState.acceptedLevel is null by default
+    expect(state.hand.callState.acceptedLevel).toBeNull();
+
+    const updated = resolveMatch(state, playerA.id);
+    expect(updated.teams[0]?.score).toBe(1);
+  });
+
+  it("awards 2 points when acceptedLevel is truco", () => {
+    const state: MatchState = {
+      ...createMatch({
+        players: [playerA, playerB],
+        pointsToWin: 15,
+        rng: seededRng(),
+      }),
+      hand: {
+        ...createMatch({
+          players: [playerA, playerB],
+          pointsToWin: 15,
+          rng: seededRng(),
+        }).hand,
+        callState: {
+          pendingCall: null,
+          acceptedLevel: "truco",
+          history: [],
+        },
+      },
+    };
+
+    const updated = resolveMatch(state, playerA.id);
+    expect(updated.teams[0]?.score).toBe(2);
+  });
+
+  it("awards 3 points when acceptedLevel is retruco", () => {
+    const state: MatchState = {
+      ...createMatch({
+        players: [playerA, playerB],
+        pointsToWin: 15,
+        rng: seededRng(),
+      }),
+      hand: {
+        ...createMatch({
+          players: [playerA, playerB],
+          pointsToWin: 15,
+          rng: seededRng(),
+        }).hand,
+        callState: {
+          pendingCall: null,
+          acceptedLevel: "retruco",
+          history: [],
+        },
+      },
+    };
+
+    const updated = resolveMatch(state, playerA.id);
+    expect(updated.teams[0]?.score).toBe(3);
+  });
+
+  it("awards 4 points when acceptedLevel is vale_cuatro", () => {
+    const state: MatchState = {
+      ...createMatch({
+        players: [playerA, playerB],
+        pointsToWin: 15,
+        rng: seededRng(),
+      }),
+      hand: {
+        ...createMatch({
+          players: [playerA, playerB],
+          pointsToWin: 15,
+          rng: seededRng(),
+        }).hand,
+        callState: {
+          pendingCall: null,
+          acceptedLevel: "vale_cuatro",
+          history: [],
+        },
+      },
+    };
+
+    const updated = resolveMatch(state, playerA.id);
+    expect(updated.teams[0]?.score).toBe(4);
+  });
+
+  it("pointsOverride takes precedence over callState-derived points", () => {
+    const state: MatchState = {
+      ...createMatch({
+        players: [playerA, playerB],
+        pointsToWin: 15,
+        rng: seededRng(),
+      }),
+      hand: {
+        ...createMatch({
+          players: [playerA, playerB],
+          pointsToWin: 15,
+          rng: seededRng(),
+        }).hand,
+        callState: {
+          pendingCall: null,
+          acceptedLevel: "vale_cuatro",
+          history: [],
+        },
+      },
+    };
+
+    // Override with 1 — rejection path awards previous level
+    const updated = resolveMatch(state, playerA.id, 1);
+    expect(updated.teams[0]?.score).toBe(1);
+  });
+});
+
+describe("dealHand — callState reset", () => {
+  it("initializes callState with empty values", () => {
+    const hand = dealHand(1, [playerA, playerB], seededRng());
+    expect(hand.callState.pendingCall).toBeNull();
+    expect(hand.callState.acceptedLevel).toBeNull();
+    expect(hand.callState.history).toEqual([]);
+  });
+
+  it("resets callState on every new hand (no carry-over)", () => {
+    const hand1 = dealHand(1, [playerA, playerB], seededRng());
+    const hand2 = dealHand(2, [playerA, playerB], seededRng());
+    // Both hands should have identical empty callState
+    expect(hand2.callState).toEqual(hand1.callState);
+    expect(hand2.callState.pendingCall).toBeNull();
   });
 });

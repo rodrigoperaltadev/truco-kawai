@@ -17,11 +17,15 @@ import type {
  * Plays a card. Returns a new MatchState on success, or a PlayError on rule violation.
  * Never mutates the input state.
  *
- * Validation order: MATCH_OVER → OUT_OF_TURN → CARD_NOT_IN_HAND → CARD_ALREADY_PLAYED.
+ * Validation order: MATCH_OVER → CALL_PENDING → OUT_OF_TURN → CARD_NOT_IN_HAND → CARD_ALREADY_PLAYED.
  */
 export function playCard(state: MatchState, cmd: PlayCardCmd): Result<MatchState> {
   if (state.phase === "matchOver") {
     return { ok: false, error: "MATCH_OVER" };
+  }
+
+  if (state.hand.callState.pendingCall?.status === "pending") {
+    return { ok: false, error: "CALL_PENDING" };
   }
 
   if (cmd.playerId !== state.currentTurn) {
