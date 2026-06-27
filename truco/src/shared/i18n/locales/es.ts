@@ -20,6 +20,23 @@ export const es = {
     about: "Acerca de",
     placeholder: "Pantalla en construcción",
   },
+  game: {
+    turn: {
+      player: "Tu turno",
+      opponent: "{{name}} está jugando",
+    },
+    actions: {
+      truco: "Truco",
+      retruco: "Re Truco",
+      vale_cuatro: "Vale Cuatro",
+      envido: "Envido",
+      real_envido: "Real Envido",
+      falta_envido: "Falta Envido",
+      quiero: "Quiero",
+      no_quiero: "No Quiero",
+      mazo: "Me voy al mazo",
+    },
+  },
   settings: {
     language: "Idioma",
     spanish: "Español",

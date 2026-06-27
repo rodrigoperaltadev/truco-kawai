@@ -22,6 +22,7 @@ import type {
 } from "@/domain/game/types";
 
 import { type GameActions, deriveActions } from "../logic/deriveActions";
+export type { GameActions } from "../logic/deriveActions";
 import {
   type LogEntry,
   type RawLogEntry,
