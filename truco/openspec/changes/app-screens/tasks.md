@@ -31,7 +31,7 @@ Chain strategy: stacked-to-main
 - [x] 1.4 Add `ranking.*` keys to both locale files (3 keys: `title`, `hierarchy_position`, `envido_value`)
 - [x] 1.5 Add `settings.music_volume` and `settings.voice_volume` to both locale files
 - [x] 1.6 Add `about.demo_link_placeholder` and `about.tech_stack` to both locale files
-- [ ] 1.7 Update `useSettingsScreen` hook to expose `musicVolume`, `voiceVolume`, `setMusicVolume`, `setVoiceVolume` — load from `@truco/music-volume` / `@truco/voice-volume` via `useEffect`, persist on change (stepped 0–1, step 0.25)
+- [x] 1.7 Update `useSettingsScreen` hook to expose `musicVolume`, `voiceVolume`, `setMusicVolume`, `setVoiceVolume` — load from `@truco/music-volume` / `@truco/voice-volume` via `useEffect`, persist on change (stepped 0–1, step 0.25)
 
 ---
 
@@ -56,41 +56,41 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Settings Screen (Volume Controls)
 
-- [ ] 4.1 Add `Row` of stepped `Button` segments (0, 0.25, 0.5, 0.75, 1) for music volume in `SettingsScreen` below locale switcher — use existing `Button` component with `variant` toggling
-- [ ] 4.2 Add identical stepped control for voice volume
-- [ ] 4.3 Update `createSettingsStyles` in `SettingsScreen.styles.ts`: add style for volume control row and label
-- [ ] 4.4 Confirm locale change already persists via existing `useSettingsScreen`; volume changes persist via updated hook from task 1.7
+- [x] 4.1 Add `Row` of stepped `Button` segments (0, 0.25, 0.5, 0.75, 1) for music volume in `SettingsScreen` below locale switcher — use existing `Button` component with `variant` toggling
+- [x] 4.2 Add identical stepped control for voice volume
+- [x] 4.3 Update `createSettingsStyles` in `SettingsScreen.styles.ts`: add style for volume control row and label
+- [x] 4.4 Confirm locale change already persists via existing `useSettingsScreen`; volume changes persist via updated hook from task 1.7
 
 ---
 
 ## Phase 5: Rules Screen
 
-- [ ] 5.1 Rewrite `RulesScreen` presentational: replace `PlaceholderScreen` with `Screen scrollable` + `ScrollView` containing sectioned `Text` blocks for each Argentine Truco topic (objective, suits, card hierarchy, truco call ladder, envido point counting, round structure, flor out-of-scope note)
-- [ ] 5.2 Update `useRulesScreen` hook: remove `subtitle` placeholder; add `sectionKeys` array mapping to `rules.*` i18n keys; no async needed (static i18n)
-- [ ] 5.3 Confirm all jargon (suits, ranks, Truco, Envido) remains Spanish — sourced from `jargon.ts`
+- [x] 5.1 Rewrite `RulesScreen` presentational: replace `PlaceholderScreen` with `Screen scrollable` + `ScrollView` containing sectioned `Text` blocks for each Argentine Truco topic (objective, suits, card hierarchy, truco call ladder, envido point counting, round structure, flor out-of-scope note)
+- [x] 5.2 Update `useRulesScreen` hook: remove `subtitle` placeholder; add `sectionKeys` array mapping to `rules.*` i18n keys; no async needed (static i18n)
+- [x] 5.3 Confirm all jargon (suits, ranks, Truco, Envido) remains Spanish — sourced from `jargon.ts`
 
 ---
 
 ## Phase 6: Ranking Screen
 
-- [ ] 6.1 Rewrite `RankingScreen` presentational: replace `PlaceholderScreen` with `Screen scrollable`; render `View` header row (`Position | Suit | Rank | Envido`) + 40 `View` rows derived from hook
-- [ ] 6.2 Update `useRankingScreen` hook: import `createDeck`, `trucoRank`, `Suit`, `Rank`; build array of 40 cards → sort by `trucoRank` asc → map to `{ position, suitLabel (from jargon), rankLabel (from jargon), envidoValue: rank <= 7 ? rank : 0 }`; expose `cards` array sorted
-- [ ] 6.3 Confirm 40 rows render (ranks 1–7, 10–12 across 4 suits = 11×4 = 44; minus 8–9 = 40 cards)
+- [x] 6.1 Rewrite `RankingScreen` presentational: replace `PlaceholderScreen` with `Screen scrollable`; render `View` header row (`Position | Suit | Rank | Envido`) + 40 `View` rows derived from hook
+- [x] 6.2 Update `useRankingScreen` hook: import `createDeck`, `trucoRank`, `Suit`, `Rank`; build array of 40 cards → sort by `trucoRank` asc → map to `{ position, suitLabel (from jargon), rankLabel (from jargon), envidoValue: rank <= 7 ? rank : 0 }`; expose `cards` array sorted
+- [x] 6.3 Confirm 40 rows render (ranks 1–7, 10–12 across 4 suits = 11×4 = 44; minus 8–9 = 40 cards)
 
 ---
 
 ## Phase 7: About Screen
 
-- [ ] 7.1 Rewrite `AboutScreen` presentational: replace `PlaceholderScreen` with `Screen`; static description paragraph, tech stack line, demo link placeholder `Text` with muted style
-- [ ] 7.2 Update `useAboutScreen` hook: update translations to use `about.demo_link_placeholder` and `about.tech_stack` keys instead of `about.description` only
+- [x] 7.1 Rewrite `AboutScreen` presentational: replace `PlaceholderScreen` with `Screen`; static description paragraph, tech stack line, demo link placeholder `Text` with muted style
+- [x] 7.2 Update `useAboutScreen` hook: update translations to use `about.demo_link_placeholder` and `about.tech_stack` keys instead of `about.description` only
 
 ---
 
 ## Phase 8: Navigation + Back Button
 
-- [ ] 8.1 Confirm `Stack` in `_layout.tsx` has `headerBackTitle` / back button visible on all sub-routes — no changes needed if existing setup covers it
-- [ ] 8.2 Verify back from `/game/setup` goes to `/` (main menu) — Expo Router default stack behavior
-- [ ] 8.3 Verify back from `/result`, `/settings`, `/rules`, `/rules/ranking`, `/about` goes to correct parent routes
+- [x] 8.1 Confirm `Stack` in `_layout.tsx` has `headerBackTitle` / back button visible on all sub-routes — no changes needed if existing setup covers it
+- [x] 8.2 Verify back from `/game/setup` goes to `/` (main menu) — Expo Router default stack behavior
+- [x] 8.3 Verify back from `/result`, `/settings`, `/rules`, `/rules/ranking`, `/about` goes to correct parent routes
 
 ---
 
@@ -98,11 +98,11 @@ Chain strategy: stacked-to-main
 
 - [x] 9.1 Add `GameSetupScreen.test.tsx`: render with Theme+I18n wrappers; assert 15/30 buttons present, CPU pill present, start button present; assert default 15 selected
 - [x] 9.2 Add `GameScreen.test.tsx` (or extend existing): render with no router context → defaults to 15/cpu; render with `pointsToWin=30` param → verify `useGameState` called with 30; verify `matchOver` triggers AsyncStorage write + navigation
-- [ ] 9.3 Add `ResultScreen.test.tsx`: mock AsyncStorage to return null → assert empty state; return valid result → assert winner text shown; return loading → assert loading indicator
-- [ ] 9.4 Add `SettingsScreen.test.tsx`: render; assert locale buttons, music/voice volume controls present
-- [ ] 9.5 Add `useResultScreen.test.ts`: `renderHook`; mock AsyncStorage; assert status machine transitions `loading → ready` and `loading → empty`
-- [ ] 9.6 Add `useSettingsScreen.test.ts`: `renderHook`; mock AsyncStorage; assert music/voice volume load from storage and persist on change
-- [ ] 9.7 Add `useRankingScreen.test.ts`: assert returned array has 40 entries; assert sorted by `trucoRank` (first = espada-1)
+- [x] 9.3 Add `ResultScreen.test.tsx`: mock AsyncStorage to return null → assert empty state; return valid result → assert winner text shown; return loading → assert loading indicator
+- [x] 9.4 Add `SettingsScreen.test.tsx`: render; assert locale buttons, music/voice volume controls present
+- [x] 9.5 Add `useResultScreen.test.ts`: `renderHook`; mock AsyncStorage; assert status machine transitions `loading → ready` and `loading → empty`
+- [x] 9.6 Add `useSettingsScreen.test.ts`: `renderHook`; mock AsyncStorage; assert music/voice volume load from storage and persist on change
+- [x] 9.7 Add `useRankingScreen.test.ts`: assert returned array has 40 entries; assert sorted by `trucoRank` (first = espada-4 per domain)
 - [x] 9.8 Run full `yarn test` suite; confirm existing tests still green
 
 ---
