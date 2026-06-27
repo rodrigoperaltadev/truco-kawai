@@ -60,3 +60,5 @@ export {
   isEnvidoWindowOpen,
   isValidEnvidoLevel,
 } from "./envido";
+
+export { foldHand } from "./fold";
