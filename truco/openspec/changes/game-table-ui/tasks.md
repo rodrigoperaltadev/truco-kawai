@@ -45,11 +45,11 @@ Chain strategy: pending (user must choose: stacked-to-main vs feature-branch-cha
 
 ## Phase 3: `useGameState` Hook + Logic Selectors
 
-- [ ] 3.1 Create `src/features/game/logic/deriveActions.ts` — pure `deriveActions(state, playerId)` per spec table (truco/retruco/vale4/envido/real/falta/quiero/noQuiero/mazo gates)
-- [ ] 3.2 Create `src/features/game/logic/logEntry.ts` — `LogEntry` type + `foldLogEntry(folderId, prevState)` + diff-based derivers for play/trick/call/envido transitions
-- [ ] 3.3 Create `src/features/game/hooks/useGameState.ts` — `useReducer` with actions `PLAY | CALL | CALL_ENVIDO | ACCEPT | REJECT | MAZO | OPPONENT_PLAY`; dispatches domain fns; derives view + actions + handlers; `useEffect` for opponent auto-play with `setTimeout(~700ms)`
-- [ ] 3.4 Write logic unit tests: `deriveActions` full spec table (all 9 action gates × valid/invalid states), log derivation per transition kind
-- [ ] 3.5 Write hook RTL tests: play/call/accept/reject/mazo flows; opponent auto-play via `jest.useFakeTimers`
+- [x] 3.1 Create `src/features/game/logic/deriveActions.ts` — pure `deriveActions(state, playerId)` per spec table (truco/retruco/vale4/envido/real/falta/quiero/noQuiero/mazo gates)
+- [x] 3.2 Create `src/features/game/logic/logEntry.ts` — `LogEntry` type + `foldLogEntry(folderId, prevState)` + diff-based derivers for play/trick/call/envido transitions
+- [x] 3.3 Create `src/features/game/hooks/useGameState.ts` — `useReducer` with actions `PLAY | CALL | CALL_ENVIDO | ACCEPT | REJECT | MAZO | OPPONENT_PLAY`; dispatches domain fns; derives view + actions + handlers; `useEffect` for opponent auto-play with `setTimeout(~700ms)`
+- [x] 3.4 Write logic unit tests: `deriveActions` full spec table (all 9 action gates × valid/invalid states), log derivation per transition kind
+- [x] 3.5 Write hook RTL tests: play/call/accept/reject/mazo flows; opponent auto-play via `jest.useFakeTimers`
 
 ---
 
