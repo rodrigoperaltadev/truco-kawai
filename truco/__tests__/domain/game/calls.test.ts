@@ -1,5 +1,5 @@
 import { acceptCall, callPoints, makeCall, nextLevel, rejectCall } from "@/domain/game/calls";
-import { emptyCallState } from "@/domain/game/match";
+import { emptyCallState, emptyEnvidoState } from "@/domain/game/match";
 import type {
   CallState,
   CallType,
@@ -37,6 +37,7 @@ function buildMatchState(overrides: Partial<MatchState> = {}): MatchState {
     ],
     rounds: [emptyRound()],
     callState: emptyCallState(),
+    envidoState: emptyEnvidoState(),
   };
 
   return {
