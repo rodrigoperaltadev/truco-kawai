@@ -110,8 +110,9 @@ export function isEnvidoWindowOpen(state: MatchState, caller: string): boolean {
 /**
  * Validates envido level escalation.
  * null → {envido, real_envido, falta_envido}
- * envido → {real_envido, falta_envido}
- * real_envido → {falta_envido}
+ * envido → {envido (recanto), real_envido, falta_envido}
+ * real_envido → {real_envido (recanto), falta_envido}
+ * falta_envido → none (terminal)
  */
 export function isValidEnvidoLevel(
   currentAccepted: EnvidoLevel | null,
@@ -121,10 +122,12 @@ export function isValidEnvidoLevel(
     return newLevel === "envido" || newLevel === "real_envido" || newLevel === "falta_envido";
   }
   if (currentAccepted === "envido") {
-    return newLevel === "real_envido" || newLevel === "falta_envido";
+    // Same-level recanto allowed for envido
+    return newLevel === "envido" || newLevel === "real_envido" || newLevel === "falta_envido";
   }
   if (currentAccepted === "real_envido") {
-    return newLevel === "falta_envido";
+    // Same-level recanto allowed for real_envido
+    return newLevel === "real_envido" || newLevel === "falta_envido";
   }
   // falta_envido is the max — no further escalation
   return false;
@@ -134,10 +137,13 @@ export function isValidEnvidoLevel(
  * Issues an envido call.
  *
  * Validation order:
- *   MATCH_OVER → OUT_OF_TURN → CALL_PENDING → ENVIDO_CALL_PENDING →
- *   ENVIDO_WINDOW_CLOSED → ENVIDO_INVALID_LEVEL
+ *   MATCH_OVER → OUT_OF_TURN → CALL_PENDING →
+ *   [counter-call | ENVIDO_WINDOW_CLOSED] → ENVIDO_INVALID_LEVEL
  *
- * On success: sets pendingEnvido, appends history, transfers currentTurn to opponent.
+ * Cold call (no pending): sets pendingEnvido, transfers currentTurn to opponent.
+ * Counter-call (pending + caller === currentTurn): implicitly accepts pending level
+ *   (stake += levelPoints(pendingLevel), acceptedLevel = pendingLevel),
+ *   creates new pendingEnvido at new level, transfers turn to original caller.
  */
 export function callEnvido(
   state: MatchState,
@@ -157,22 +163,61 @@ export function callEnvido(
     return { ok: false, error: "CALL_PENDING" };
   }
 
-  // Envido already pending
-  if (state.hand.envidoState.pendingEnvido?.status === "pending") {
-    return { ok: false, error: "ENVIDO_CALL_PENDING" };
+  const pending = state.hand.envidoState.pendingEnvido;
+
+  // Counter-call branch: pending envido + caller is currentTurn (responder raising)
+  if (pending?.status === "pending") {
+    // Check escalation relative to the pending level
+    if (!isValidEnvidoLevel(pending.level, level)) {
+      return { ok: false, error: "ENVIDO_INVALID_LEVEL" };
+    }
+
+    // Implicitly accept the pending level
+    const newStake = state.hand.envidoState.stake + levelPoints(pending.level);
+    const newAcceptedLevel = pending.level;
+
+    // Record the implicit acceptance in history
+    const acceptEntry: EnvidoHistoryEntry = {
+      actor: caller,
+      level: pending.level,
+      action: "accepted",
+      round: currentRoundNumber(state.hand),
+    };
+
+    // Create new pending envido at the raised level
+    const newPendingEnvido = { caller, level, status: "pending" as const };
+    const raiseEntry: EnvidoHistoryEntry = {
+      actor: caller,
+      level,
+      action: "issued",
+      round: currentRoundNumber(state.hand),
+    };
+
+    const newEnvidoState: EnvidoState = {
+      pendingEnvido: newPendingEnvido,
+      acceptedLevel: newAcceptedLevel,
+      stake: newStake,
+      resolved: false,
+      history: [...state.hand.envidoState.history, acceptEntry, raiseEntry],
+    };
+    const newHand: HandState = { ...state.hand, envidoState: newEnvidoState };
+
+    // Turn goes back to the original caller (who now must respond)
+    return { ok: true, state: { ...state, hand: newHand, currentTurn: pending.caller } };
   }
 
+  // Cold call branch: no pending envido
   // Window check: round 1, caller hasn't played, not resolved
   if (!isEnvidoWindowOpen(state, caller)) {
     return { ok: false, error: "ENVIDO_WINDOW_CLOSED" };
   }
 
-  // Level escalation check
+  // Level escalation check relative to accepted level
   if (!isValidEnvidoLevel(state.hand.envidoState.acceptedLevel, level)) {
     return { ok: false, error: "ENVIDO_INVALID_LEVEL" };
   }
 
-  const pendingEnvido = { caller, level, status: "pending" as const };
+  const newPendingEnvido = { caller, level, status: "pending" as const };
   const historyEntry: EnvidoHistoryEntry = {
     actor: caller,
     level,
@@ -180,7 +225,7 @@ export function callEnvido(
     round: currentRoundNumber(state.hand),
   };
   const newEnvidoState: EnvidoState = {
-    pendingEnvido,
+    pendingEnvido: newPendingEnvido,
     acceptedLevel: state.hand.envidoState.acceptedLevel,
     stake: state.hand.envidoState.stake,
     resolved: false,

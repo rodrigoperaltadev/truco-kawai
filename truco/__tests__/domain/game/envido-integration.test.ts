@@ -270,3 +270,110 @@ describe("playCard blocked while envido pending", () => {
     if (!blocked.ok) expect(blocked.error).toBe("ENVIDO_CALL_PENDING");
   });
 });
+
+// ── Integration: counter-call chain → accept ─────────────────────────
+
+describe("counter-call chain → accept", () => {
+  it("envido → counter real_envido → accept awards 5 pts", () => {
+    const rng = createSeededRng(42);
+    let state = createMatch({ players: [playerA, playerB], pointsToWin: 15, rng });
+
+    // A calls envido
+    const r1 = callEnvido(state, playerA.id, "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    state = r1.state;
+    expect(state.currentTurn).toBe(playerB.id);
+
+    // B counter-calls real_envido (implicit accept envido: stake=2)
+    const r2 = callEnvido(state, playerB.id, "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    state = r2.state;
+    expect(state.hand.envidoState.stake).toBe(2);
+    expect(state.hand.envidoState.acceptedLevel).toBe("envido");
+    expect(state.currentTurn).toBe(playerA.id);
+
+    // A accepts real_envido
+    const r3 = acceptEnvido(state, playerA.id);
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    state = r3.state;
+    // Awarded = stake + levelPoints("real_envido") = 2 + 3 = 5
+    const winnerTeam = state.teams.find((t) => t.score > 0);
+    expect(winnerTeam?.score).toBe(5);
+    expect(state.hand.envidoState.resolved).toBe(true);
+  });
+
+  it("envido → counter envido → counter real_envido → reject awards 5 pts", () => {
+    const rng = createSeededRng(42);
+    let state = createMatch({ players: [playerA, playerB], pointsToWin: 15, rng });
+
+    // A calls envido
+    const r1 = callEnvido(state, playerA.id, "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    state = r1.state;
+
+    // B counter-calls envido (stake=2, pending={B,envido})
+    const r2 = callEnvido(state, playerB.id, "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    state = r2.state;
+    expect(state.currentTurn).toBe(playerA.id);
+
+    // A counter-calls real_envido (stake=2+2=4, pending={A,real_envido})
+    const r3 = callEnvido(state, playerA.id, "real_envido");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    state = r3.state;
+    expect(state.hand.envidoState.stake).toBe(4);
+    expect(state.currentTurn).toBe(playerB.id);
+
+    // B rejects
+    const r4 = rejectEnvido(state, playerB.id);
+    expect(r4.ok).toBe(true);
+    if (!r4.ok) return;
+    state = r4.state;
+    // A (caller of pending real_envido) wins: max(stake+1, lvlPts-1) = max(5, 2) = 5
+    const teamA = state.teams.find((t) => t.id === `team-${playerA.id}`);
+    expect(teamA?.score).toBe(5);
+    expect(state.hand.envidoState.resolved).toBe(true);
+  });
+});
+
+// ── Integration: envido+truco ordering after counter-calls ───────────
+
+describe("envido+truco ordering after counter-calls", () => {
+  it("after counter-call chain resolves, truco can be called", () => {
+    const rng = createSeededRng(42);
+    let state = createMatch({ players: [playerA, playerB], pointsToWin: 15, rng });
+
+    // A calls envido
+    const r1 = callEnvido(state, playerA.id, "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    state = r1.state;
+
+    // B counter-calls envido (stake=2, pending={B,envido}, turn→A)
+    const r2 = callEnvido(state, playerB.id, "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    state = r2.state;
+
+    // A accepts (turn→B, the original caller of the counter)
+    const r3 = acceptEnvido(state, playerA.id);
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    state = r3.state;
+    expect(state.hand.envidoState.resolved).toBe(true);
+    // Turn is now B (caller of the counter-call that was accepted)
+    expect(state.currentTurn).toBe(playerB.id);
+
+    // B can now call truco
+    const r4 = makeCall(state, playerB.id, "truco");
+    expect(r4.ok).toBe(true);
+    if (!r4.ok) return;
+    expect(r4.state.hand.callState.pendingCall?.level).toBe("truco");
+  });
+});

@@ -161,6 +161,16 @@ describe("calcEnvidoPoints", () => {
     ];
     expect(calcEnvidoPoints(cards)).toBe(calcEnvidoPoints(cards));
   });
+
+  it("three same-suit cards, flor disabled — take two highest: espada-7 + espada-6 + espada-1 → 33", () => {
+    expect(
+      calcEnvidoPoints([
+        { suit: "espada", rank: 7 },
+        { suit: "espada", rank: 6 },
+        { suit: "espada", rank: 1 },
+      ]),
+    ).toBe(33); // 7 + 6 + 20; rank-1 card is ignored
+  });
 });
 
 // ── levelPoints ──────────────────────────────────────────────────────
@@ -188,13 +198,14 @@ describe("isValidEnvidoLevel", () => {
     expect(isValidEnvidoLevel(null, "falta_envido")).toBe(true);
   });
 
-  it("envido → real_envido or falta_envido", () => {
+  it("envido → envido (recanto), real_envido, or falta_envido", () => {
+    expect(isValidEnvidoLevel("envido", "envido")).toBe(true);
     expect(isValidEnvidoLevel("envido", "real_envido")).toBe(true);
     expect(isValidEnvidoLevel("envido", "falta_envido")).toBe(true);
-    expect(isValidEnvidoLevel("envido", "envido")).toBe(false);
   });
 
-  it("real_envido → falta_envido only", () => {
+  it("real_envido → real_envido (recanto) or falta_envido", () => {
+    expect(isValidEnvidoLevel("real_envido", "real_envido")).toBe(true);
     expect(isValidEnvidoLevel("real_envido", "falta_envido")).toBe(true);
     expect(isValidEnvidoLevel("real_envido", "envido")).toBe(false);
   });
@@ -334,14 +345,14 @@ describe("callEnvido", () => {
     if (!res.ok) expect(res.error).toBe("ENVIDO_WINDOW_CLOSED");
   });
 
-  it("duplicate level rejected", () => {
+  it("falta_envido after falta_envido rejected (terminal)", () => {
     const state = buildMatch({
       hand: {
         ...buildMatch().hand,
-        envidoState: { ...emptyEnvidoState(), acceptedLevel: "envido" },
+        envidoState: { ...emptyEnvidoState(), acceptedLevel: "falta_envido" },
       },
     });
-    const res = callEnvido(state, "A", "envido");
+    const res = callEnvido(state, "A", "falta_envido");
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toBe("ENVIDO_INVALID_LEVEL");
   });
@@ -358,8 +369,9 @@ describe("callEnvido", () => {
     if (!res.ok) expect(res.error).toBe("OUT_OF_TURN");
   });
 
-  it("blocked when envido already pending", () => {
+  it("counter-call allowed when responder raises", () => {
     const state = buildMatch({
+      currentTurn: "B",
       hand: {
         ...buildMatch().hand,
         envidoState: {
@@ -368,9 +380,137 @@ describe("callEnvido", () => {
         },
       },
     });
-    const res = callEnvido(state, "A", "real_envido");
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toBe("ENVIDO_CALL_PENDING");
+    // B (currentTurn, responder) counter-calls real_envido
+    const res = callEnvido(state, "B", "real_envido");
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    // Implicitly accepted envido: stake = 2, acceptedLevel = "envido"
+    expect(res.state.hand.envidoState.stake).toBe(2);
+    expect(res.state.hand.envidoState.acceptedLevel).toBe("envido");
+    // New pending envido at real_envido level
+    expect(res.state.hand.envidoState.pendingEnvido?.level).toBe("real_envido");
+    expect(res.state.hand.envidoState.pendingEnvido?.caller).toBe("B");
+    // Turn goes back to original caller (A)
+    expect(res.state.currentTurn).toBe("A");
+  });
+});
+
+// ── callEnvido counter-calls ─────────────────────────────────────────
+
+describe("callEnvido counter-calls", () => {
+  it("envido → envido same-level recanto", () => {
+    // A calls envido, B counter-calls envido (same level)
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // Implicitly accepted: stake = 2, acceptedLevel = "envido"
+    expect(r2.state.hand.envidoState.stake).toBe(2);
+    expect(r2.state.hand.envidoState.acceptedLevel).toBe("envido");
+    // New pending at same level
+    expect(r2.state.hand.envidoState.pendingEnvido?.level).toBe("envido");
+    expect(r2.state.hand.envidoState.pendingEnvido?.caller).toBe("B");
+    // Turn back to A
+    expect(r2.state.currentTurn).toBe("A");
+  });
+
+  it("envido → real_envido counter-call", () => {
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.hand.envidoState.stake).toBe(2);
+    expect(r2.state.hand.envidoState.acceptedLevel).toBe("envido");
+    expect(r2.state.hand.envidoState.pendingEnvido?.level).toBe("real_envido");
+    expect(r2.state.currentTurn).toBe("A");
+  });
+
+  it("envido → falta_envido counter-call", () => {
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "falta_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.hand.envidoState.stake).toBe(2);
+    expect(r2.state.hand.envidoState.acceptedLevel).toBe("envido");
+    expect(r2.state.hand.envidoState.pendingEnvido?.level).toBe("falta_envido");
+    expect(r2.state.currentTurn).toBe("A");
+  });
+
+  it("real_envido → real_envido same-level recanto", () => {
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "real_envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.hand.envidoState.stake).toBe(3);
+    expect(r2.state.hand.envidoState.acceptedLevel).toBe("real_envido");
+    expect(r2.state.hand.envidoState.pendingEnvido?.level).toBe("real_envido");
+    expect(r2.state.currentTurn).toBe("A");
+  });
+
+  it("falta_envido → falta_envido blocked (terminal)", () => {
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "falta_envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "falta_envido");
+    expect(r2.ok).toBe(false);
+    if (!r2.ok) expect(r2.error).toBe("ENVIDO_INVALID_LEVEL");
+  });
+
+  it("chain: envido → envido → real_envido accumulates correctly", () => {
+    const state = buildMatch();
+    // A calls envido
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    // B counter-calls envido (stake = 2, accepted = "envido")
+    const r2 = callEnvido(r1.state, "B", "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // A counter-calls real_envido (stake = 2 + 2 = 4, accepted = "envido")
+    const r3 = callEnvido(r2.state, "A", "real_envido");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    expect(r3.state.hand.envidoState.stake).toBe(4);
+    expect(r3.state.hand.envidoState.acceptedLevel).toBe("envido");
+    expect(r3.state.hand.envidoState.pendingEnvido?.level).toBe("real_envido");
+    expect(r3.state.currentTurn).toBe("B");
+  });
+
+  it("counter-call adds history entries for accept + issue", () => {
+    const state = buildMatch();
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+
+    const r2 = callEnvido(r1.state, "B", "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // History: A issued envido, B accepted envido, B issued real_envido
+    expect(r2.state.hand.envidoState.history).toHaveLength(3);
+    expect(r2.state.hand.envidoState.history[0]?.action).toBe("issued");
+    expect(r2.state.hand.envidoState.history[0]?.actor).toBe("A");
+    expect(r2.state.hand.envidoState.history[1]?.action).toBe("accepted");
+    expect(r2.state.hand.envidoState.history[1]?.actor).toBe("B");
+    expect(r2.state.hand.envidoState.history[2]?.action).toBe("issued");
+    expect(r2.state.hand.envidoState.history[2]?.actor).toBe("B");
   });
 });
 
@@ -452,6 +592,66 @@ describe("acceptEnvido", () => {
     expect(acceptRes.state.teams[0]?.score).toBe(15);
     expect(acceptRes.state.phase).toBe("matchOver");
   });
+
+  it("accumulated: envido + envido counter + accept = 4 pts", () => {
+    // A: oro-1 + oro-7 = 28; B: espada-1 + espada-2 = 23
+    const state = buildWithCards(
+      [
+        { suit: "oro", rank: 1 },
+        { suit: "oro", rank: 7 },
+        { suit: "basto", rank: 3 },
+      ],
+      [
+        { suit: "espada", rank: 1 },
+        { suit: "espada", rank: 2 },
+        { suit: "copa", rank: 3 },
+      ],
+    );
+    // A calls envido
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    // B counter-calls envido (stake = 2, accepted = "envido", pending = {B, envido})
+    const r2 = callEnvido(r1.state, "B", "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // A accepts (turn was back on A)
+    const r3 = acceptEnvido(r2.state, "A");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    // A wins (28 > 23). Awarded = stake + levelPoints("envido") = 2 + 2 = 4
+    expect(r3.state.teams[0]?.score).toBe(4);
+    expect(r3.state.hand.envidoState.resolved).toBe(true);
+  });
+
+  it("accumulated: envido + real_envido counter + accept = 5 pts", () => {
+    const state = buildWithCards(
+      [
+        { suit: "oro", rank: 1 },
+        { suit: "oro", rank: 7 },
+        { suit: "basto", rank: 3 },
+      ],
+      [
+        { suit: "espada", rank: 1 },
+        { suit: "espada", rank: 2 },
+        { suit: "copa", rank: 3 },
+      ],
+    );
+    // A calls envido
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    // B counter-calls real_envido (stake = 2, accepted = "envido", pending = {B, real_envido})
+    const r2 = callEnvido(r1.state, "B", "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // A accepts
+    const r3 = acceptEnvido(r2.state, "A");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    // A wins (28 > 23). Awarded = stake + levelPoints("real_envido") = 2 + 3 = 5
+    expect(r3.state.teams[0]?.score).toBe(5);
+  });
 });
 
 // ── rejectEnvido ─────────────────────────────────────────────────────
@@ -504,6 +704,45 @@ describe("rejectEnvido", () => {
     if (!rejectRes.ok) return;
     // Caller (A) wins faltaPoints = max(1, 15-10) = 5
     expect(rejectRes.state.teams[0]?.score).toBe(15);
+  });
+
+  it("reject after counter-call: envido→envido counter, reject = 3 pts", () => {
+    const state = buildMatch();
+    // A calls envido
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    // B counter-calls envido (stake = 2, pending = {B, envido})
+    const r2 = callEnvido(r1.state, "B", "envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // A rejects (turn was back on A)
+    const r3 = rejectEnvido(r2.state, "A");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    // B (caller of pending) wins: max(stake + 1, levelPoints("envido") - 1) = max(3, 1) = 3
+    expect(r3.state.teams[1]?.score).toBe(3);
+    expect(r3.state.hand.envidoState.resolved).toBe(true);
+    // Turn goes to opponent of responder (A), which is B
+    expect(r3.state.currentTurn).toBe("B");
+  });
+
+  it("reject after counter-call: envido→real_envido counter, reject = 3 pts", () => {
+    const state = buildMatch();
+    // A calls envido
+    const r1 = callEnvido(state, "A", "envido");
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    // B counter-calls real_envido (stake = 2, pending = {B, real_envido})
+    const r2 = callEnvido(r1.state, "B", "real_envido");
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // A rejects
+    const r3 = rejectEnvido(r2.state, "A");
+    expect(r3.ok).toBe(true);
+    if (!r3.ok) return;
+    // B wins: max(stake + 1, levelPoints("real_envido") - 1) = max(3, 2) = 3
+    expect(r3.state.teams[1]?.score).toBe(3);
   });
 });
 
