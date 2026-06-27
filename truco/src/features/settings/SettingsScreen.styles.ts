@@ -16,5 +16,8 @@ export function createSettingsStyles(theme: Theme) {
     localeButton: {
       flex: 1,
     },
+    volumeButton: {
+      flex: 1,
+    },
   });
 }
