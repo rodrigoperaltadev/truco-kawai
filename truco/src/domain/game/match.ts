@@ -4,6 +4,7 @@ import { startHandRoles } from "./turn";
 import type {
   CallState,
   CreateMatchOptions,
+  EnvidoState,
   HandState,
   MatchState,
   Player,
@@ -22,6 +23,13 @@ const HAND_SIZE = 3;
  */
 export function emptyCallState(): CallState {
   return { pendingCall: null, acceptedLevel: null, history: [] };
+}
+
+/**
+ * Returns an empty EnvidoState for a new hand.
+ */
+export function emptyEnvidoState(): EnvidoState {
+  return { pendingEnvido: null, acceptedLevel: null, stake: 0, resolved: false, history: [] };
 }
 
 /**
@@ -121,6 +129,7 @@ export function dealHand(
     players: playerHands,
     rounds: [initialRound],
     callState: emptyCallState(),
+    envidoState: emptyEnvidoState(),
   };
 }
 
@@ -178,6 +187,75 @@ export function resolveMatch(
     teams: updatedTeams,
     hand: nextHand,
     currentTurn: nextHand.mano,
+  };
+}
+
+/**
+ * Calculates falta envido points for a given team.
+ * Returns max(1, pointsToWin - teamScore).
+ */
+export function faltaPoints(state: MatchState, winnerTeamIdx: number): number {
+  const team = state.teams[winnerTeamIdx];
+  if (team === undefined) {
+    throw new Error(`Team index ${winnerTeamIdx} out of range`);
+  }
+  return Math.max(1, state.pointsToWin - team.score);
+}
+
+/**
+ * Scores envido points mid-hand. Adds points to the winner's team score.
+ * Sets matchOver if score >= pointsToWin. Does NOT deal a new hand.
+ * If nextTurn is provided, uses it; otherwise defaults to the opponent of the winner.
+ */
+export function scoreEnvido(
+  state: MatchState,
+  winnerId: string,
+  points: number,
+  nextTurn?: string,
+): MatchState {
+  const teamIdx = state.teams.findIndex((team) => {
+    const player = team.players[0];
+    return player !== undefined && player.id === winnerId;
+  });
+
+  if (teamIdx === -1) {
+    throw new Error(`Envido winner ${winnerId} not found in any team`);
+  }
+
+  const winningTeam = state.teams[teamIdx];
+  if (winningTeam === undefined) {
+    throw new Error("Expected winning team");
+  }
+
+  const newScore = winningTeam.score + points;
+  const team0 = state.teams[0];
+  const team1 = state.teams[1];
+  if (team0 === undefined || team1 === undefined) {
+    throw new Error("Expected two teams");
+  }
+  const updatedTeams: readonly [Team, Team] = [
+    teamIdx === 0 ? { ...team0, score: newScore } : team0,
+    teamIdx === 1 ? { ...team1, score: newScore } : team1,
+  ];
+
+  if (newScore >= state.pointsToWin) {
+    return {
+      ...state,
+      teams: updatedTeams,
+      phase: "matchOver",
+      winner: winningTeam.id,
+    };
+  }
+
+  // Do NOT deal a new hand — envido resolves mid-hand.
+  // Set currentTurn to nextTurn if provided, otherwise opponent of the winner.
+  const opponent = state.hand.players.find((p) => p.playerId !== winnerId);
+  const defaultNextTurn = opponent !== undefined ? opponent.playerId : state.currentTurn;
+
+  return {
+    ...state,
+    teams: updatedTeams,
+    currentTurn: nextTurn ?? defaultNextTurn,
   };
 }
 

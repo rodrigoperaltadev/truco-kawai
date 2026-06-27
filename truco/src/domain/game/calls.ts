@@ -1,3 +1,4 @@
+import { rejectEnvido } from "./envido";
 import { resolveMatch } from "./match";
 import type { CallHistoryEntry, CallState, CallType, HandState, MatchState, Result } from "./types";
 
@@ -54,6 +55,11 @@ export function makeCall(state: MatchState, caller: string, level: CallType): Re
 
   if (state.hand.callState.pendingCall?.status === "pending") {
     return { ok: false, error: "CALL_ALREADY_PENDING" };
+  }
+
+  // Envido call pending blocks truco
+  if (state.hand.envidoState.pendingEnvido?.status === "pending") {
+    return { ok: false, error: "ENVIDO_CALL_PENDING" };
   }
 
   if (hasCallerPlayedInCurrentTrick(state.hand, caller)) {
@@ -153,7 +159,16 @@ export function rejectCall(state: MatchState, responder: string): Result<MatchSt
     history: [...state.hand.callState.history, historyEntry],
   };
   const newHand: HandState = { ...state.hand, callState: newCallState };
-  const stateWithHistory: MatchState = { ...state, hand: newHand };
+  let stateWithHistory: MatchState = { ...state, hand: newHand };
+
+  // If envido is still pending, resolve it first (rejection scoring) before truco
+  if (stateWithHistory.hand.envidoState.pendingEnvido?.status === "pending") {
+    const envidoResult = rejectEnvido(stateWithHistory, responder);
+    if (!envidoResult.ok) {
+      return envidoResult;
+    }
+    stateWithHistory = envidoResult.state;
+  }
 
   const override = callPoints(state.hand.callState.acceptedLevel);
   return { ok: true, state: resolveMatch(stateWithHistory, pending.caller, override) };

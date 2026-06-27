@@ -1,5 +1,5 @@
 import { resolveHand } from "@/domain/game/hand";
-import { emptyCallState } from "@/domain/game/match";
+import { emptyCallState, emptyEnvidoState } from "@/domain/game/match";
 import type { HandState, RoundState } from "@/domain/game/types";
 
 function resolvedTrick(winner: string | "tie") {
@@ -21,6 +21,7 @@ function makeHand(rounds: RoundState[], mano = "A"): HandState {
     ],
     rounds,
     callState: emptyCallState(),
+    envidoState: emptyEnvidoState(),
   };
 }
 

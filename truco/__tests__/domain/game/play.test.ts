@@ -1,6 +1,6 @@
 import { cardId } from "@/domain/deck";
 import { acceptCall, makeCall } from "@/domain/game/calls";
-import { emptyCallState } from "@/domain/game/match";
+import { emptyCallState, emptyEnvidoState } from "@/domain/game/match";
 import { playCard } from "@/domain/game/play";
 import type {
   CallState,
@@ -39,6 +39,7 @@ function buildState(overrides: Partial<MatchState> = {}): MatchState {
     ],
     rounds: [emptyTrick()],
     callState: emptyCallState(),
+    envidoState: emptyEnvidoState(),
   };
 
   return {
@@ -82,6 +83,7 @@ function buildFullHandState(): MatchState {
       ],
       rounds: [emptyTrick()],
       callState: emptyCallState(),
+      envidoState: emptyEnvidoState(),
     },
   });
 }
@@ -133,6 +135,7 @@ describe("playCard — validations", () => {
           },
         ],
         callState: emptyCallState(),
+        envidoState: emptyEnvidoState(),
       },
     });
     // Try to play espada-4 again (already in trick)
@@ -264,6 +267,7 @@ describe("playCard — valid plays", () => {
         ],
         rounds: [emptyTrick()],
         callState: emptyCallState(),
+        envidoState: emptyEnvidoState(),
       },
     });
 
@@ -313,6 +317,7 @@ describe("playCard — valid plays", () => {
         ],
         rounds: [emptyTrick()],
         callState: emptyCallState(),
+        envidoState: emptyEnvidoState(),
       },
       currentTurn: "A",
       winner: null,
