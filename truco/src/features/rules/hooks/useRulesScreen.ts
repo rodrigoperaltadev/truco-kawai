@@ -7,8 +7,14 @@ export function useRulesScreen() {
 
   const translations = useMemo(
     () => ({
-      title: t("screens.rules"),
-      subtitle: t("screens.placeholder"),
+      title: t("rules.title"),
+      objective: t("rules.objective"),
+      suits: t("rules.suits"),
+      hierarchy: t("rules.hierarchy"),
+      trucoCalls: t("rules.truco_calls"),
+      envidoPoints: t("rules.envido_points"),
+      rounds: t("rules.rounds"),
+      florNote: t("rules.flor_note"),
     }),
     [t],
   );
