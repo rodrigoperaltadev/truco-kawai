@@ -44,6 +44,7 @@ export type HandState = Readonly<{
   players: readonly [PlayerHand, PlayerHand];
   rounds: readonly RoundState[];
   callState: CallState;
+  envidoState: EnvidoState;
 }>;
 
 export type MatchState = Readonly<{
@@ -93,6 +94,32 @@ export type CallState = Readonly<{
   history: readonly CallHistoryEntry[];
 }>;
 
+// ── Envido types ────────────────────────────────────────────────────
+
+export type EnvidoLevel = "envido" | "real_envido" | "falta_envido";
+export type EnvidoAction = "issued" | "accepted" | "rejected";
+
+export type PendingEnvido = Readonly<{
+  caller: string;
+  level: EnvidoLevel;
+  status: "pending";
+}>;
+
+export type EnvidoHistoryEntry = Readonly<{
+  actor: string;
+  level: EnvidoLevel;
+  action: EnvidoAction;
+  round: number;
+}>;
+
+export type EnvidoState = Readonly<{
+  pendingEnvido: PendingEnvido | null;
+  acceptedLevel: EnvidoLevel | null;
+  stake: number;
+  resolved: boolean;
+  history: readonly EnvidoHistoryEntry[];
+}>;
+
 // ── Error types ───────────────────────────────────────────────────────
 
 export type GameError =
@@ -103,7 +130,11 @@ export type GameError =
   | "CARD_ALREADY_PLAYED"
   | "INVALID_CALL_LEVEL"
   | "CALL_ALREADY_PENDING"
-  | "CALL_WINDOW_CLOSED";
+  | "CALL_WINDOW_CLOSED"
+  | "ENVIDO_CALL_PENDING"
+  | "ENVIDO_WINDOW_CLOSED"
+  | "ENVIDO_ALREADY_RESOLVED"
+  | "ENVIDO_INVALID_LEVEL";
 
 export type PlayError = GameError;
 
