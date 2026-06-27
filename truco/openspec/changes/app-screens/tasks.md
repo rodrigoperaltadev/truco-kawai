@@ -25,32 +25,32 @@ Chain strategy: stacked-to-main
 
 ## Phase 1: Infrastructure — i18n Keys + Hooks
 
-- [ ] 1.1 Add `setup.*` keys to `src/shared/i18n/locales/es.ts` and `en.ts` (7 keys: `points_to_win`, `points_15`, `points_30`, `opponent`, `opponent_cpu`, `start`, `player_turn`)
-- [ ] 1.2 Add `result.*` keys to both locale files (7 keys: `you_win`, `cpu_wins`, `final_score`, `play_again`, `back_to_menu`, `loading`, `empty`)
-- [ ] 1.3 Add `rules.*` keys to both locale files (8 keys: `title`, `objective`, `suits`, `hierarchy`, `truco_calls`, `envido_points`, `rounds`, `flor_note`)
-- [ ] 1.4 Add `ranking.*` keys to both locale files (3 keys: `title`, `hierarchy_position`, `envido_value`)
-- [ ] 1.5 Add `settings.music_volume` and `settings.voice_volume` to both locale files
-- [ ] 1.6 Add `about.demo_link_placeholder` and `about.tech_stack` to both locale files
+- [x] 1.1 Add `setup.*` keys to `src/shared/i18n/locales/es.ts` and `en.ts` (7 keys: `points_to_win`, `points_15`, `points_30`, `opponent`, `opponent_cpu`, `start`, `player_turn`)
+- [x] 1.2 Add `result.*` keys to both locale files (7 keys: `you_win`, `cpu_wins`, `final_score`, `play_again`, `back_to_menu`, `loading`, `empty`)
+- [x] 1.3 Add `rules.*` keys to both locale files (8 keys: `title`, `objective`, `suits`, `hierarchy`, `truco_calls`, `envido_points`, `rounds`, `flor_note`)
+- [x] 1.4 Add `ranking.*` keys to both locale files (3 keys: `title`, `hierarchy_position`, `envido_value`)
+- [x] 1.5 Add `settings.music_volume` and `settings.voice_volume` to both locale files
+- [x] 1.6 Add `about.demo_link_placeholder` and `about.tech_stack` to both locale files
 - [ ] 1.7 Update `useSettingsScreen` hook to expose `musicVolume`, `voiceVolume`, `setMusicVolume`, `setVoiceVolume` — load from `@truco/music-volume` / `@truco/voice-volume` via `useEffect`, persist on change (stepped 0–1, step 0.25)
 
 ---
 
 ## Phase 2: Setup + GameScreen Refactor + Result Persistence
 
-- [ ] 2.1 Rewrite `GameSetupScreen` presentational: replace `PlaceholderScreen` with `Screen`, segmented `Button` pair for 15/30 points, `Pill` showing CPU opponent, primary `Button` "Start game"; default selection = 15
-- [ ] 2.2 Update `useGameSetupScreen` hook: add `pointsToWin` state (default `15`), `startGame()` nav function that calls `router.push('/game?pointsToWin=15&opponentId=cpu')` or `'/game?pointsToWin=30&opponentId=cpu'`
-- [ ] 2.3 Refactor `GameScreen` — drop `TEMP_PLAYERS` / hardcoded opts; add `useLocalSearchParams()` to read `pointsToWin` and `opponentId`; build `players` array and call `useGameState` with parsed options; default to `15` / `"cpu"` when params absent
-- [ ] 2.4 Add `useEffect` to `GameScreen` keyed on `view.phase === "matchOver"` — on match over: `AsyncStorage.setItem("@truco/last-result", JSON.stringify({ isPlayerWin, nosScore, ellosScore, pointsToWin }))` then `router.replace("/result")`
-- [ ] 2.5 Update `useGameScreen` hook: expose `startMatchOverEffect` or restructure so GameScreen handles the effect; update `translations` to remove placeholder reference
-- [ ] 2.6 Update `GameScreen.styles.ts`: add styles for new layout if needed (or confirm existing styles suffice)
+- [x] 2.1 Rewrite `GameSetupScreen` presentational: replace `PlaceholderScreen` with `Screen`, segmented `Button` pair for 15/30 points, `Pill` showing CPU opponent, primary `Button` "Start game"; default selection = 15
+- [x] 2.2 Update `useGameSetupScreen` hook: add `pointsToWin` state (default `15`), `startGame()` nav function that calls `router.push('/game?pointsToWin=15&opponentId=cpu')` or `'/game?pointsToWin=30&opponentId=cpu'`
+- [x] 2.3 Refactor `GameScreen` — drop `TEMP_PLAYERS` / hardcoded opts; add `useLocalSearchParams()` to read `pointsToWin` and `opponentId`; build `players` array and call `useGameState` with parsed options; default to `15` / `"cpu"` when params absent
+- [x] 2.4 Add `useEffect` to `GameScreen` keyed on `view.phase === "matchOver"` — on match over: `AsyncStorage.setItem("@truco/last-result", JSON.stringify({ isPlayerWin, nosScore, ellosScore, pointsToWin }))` then `router.replace("/result")`
+- [x] 2.5 Update `useGameScreen` hook: expose `startMatchOverEffect` or restructure so GameScreen handles the effect; update `translations` to remove placeholder reference
+- [x] 2.6 Update `GameScreen.styles.ts`: add styles for new layout if needed (or confirm existing styles suffice)
 
 ---
 
 ## Phase 3: Result Screen
 
-- [ ] 3.1 Rewrite `ResultScreen` presentational: replace `PlaceholderScreen` with `Screen` + loading state (activity indicator), result state (winner banner, `Text` for `you_win` / `cpu_wins` i18n keys, score display), empty state (message + "Back to menu" `Button`)
-- [ ] 3.2 Define `LastResult` type: `{ isPlayerWin: boolean; nosScore: number; ellosScore: number; pointsToWin: 15 | 30 }`
-- [ ] 3.3 Update `useResultScreen` hook: add state machine `"loading" | "ready" | "empty"`; `useEffect` reads `@truco/last-result` → `JSON.parse` (try/catch → `"empty"`); expose `result`, `status`, `backToMenu()` → `router.replace("/")`, `playAgain()` → `router.replace("/game/setup")`; update translations to use real keys instead of placeholder
+- [x] 3.1 Rewrite `ResultScreen` presentational: replace `PlaceholderScreen` with `Screen` + loading state (activity indicator), result state (winner banner, `Text` for `you_win` / `cpu_wins` i18n keys, score display), empty state (message + "Back to menu" `Button`)
+- [x] 3.2 Define `LastResult` type: `{ isPlayerWin: boolean; nosScore: number; ellosScore: number; pointsToWin: 15 | 30 }`
+- [x] 3.3 Update `useResultScreen` hook: add state machine `"loading" | "ready" | "empty"`; `useEffect` reads `@truco/last-result` → `JSON.parse` (try/catch → `"empty"`); expose `result`, `status`, `backToMenu()` → `router.replace("/")`, `playAgain()` → `router.replace("/game/setup")`; update translations to use real keys instead of placeholder
 
 ---
 
@@ -96,14 +96,14 @@ Chain strategy: stacked-to-main
 
 ## Phase 9: Tests
 
-- [ ] 9.1 Add `GameSetupScreen.test.tsx`: render with Theme+I18n wrappers; assert 15/30 buttons present, CPU pill present, start button present; assert default 15 selected
-- [ ] 9.2 Add `GameScreen.test.tsx` (or extend existing): render with no router context → defaults to 15/cpu; render with `pointsToWin=30` param → verify `useGameState` called with 30; verify `matchOver` triggers AsyncStorage write + navigation
+- [x] 9.1 Add `GameSetupScreen.test.tsx`: render with Theme+I18n wrappers; assert 15/30 buttons present, CPU pill present, start button present; assert default 15 selected
+- [x] 9.2 Add `GameScreen.test.tsx` (or extend existing): render with no router context → defaults to 15/cpu; render with `pointsToWin=30` param → verify `useGameState` called with 30; verify `matchOver` triggers AsyncStorage write + navigation
 - [ ] 9.3 Add `ResultScreen.test.tsx`: mock AsyncStorage to return null → assert empty state; return valid result → assert winner text shown; return loading → assert loading indicator
 - [ ] 9.4 Add `SettingsScreen.test.tsx`: render; assert locale buttons, music/voice volume controls present
 - [ ] 9.5 Add `useResultScreen.test.ts`: `renderHook`; mock AsyncStorage; assert status machine transitions `loading → ready` and `loading → empty`
 - [ ] 9.6 Add `useSettingsScreen.test.ts`: `renderHook`; mock AsyncStorage; assert music/voice volume load from storage and persist on change
 - [ ] 9.7 Add `useRankingScreen.test.ts`: assert returned array has 40 entries; assert sorted by `trucoRank` (first = espada-1)
-- [ ] 9.8 Run full `yarn test` suite; confirm existing tests still green
+- [x] 9.8 Run full `yarn test` suite; confirm existing tests still green
 
 ---
 
