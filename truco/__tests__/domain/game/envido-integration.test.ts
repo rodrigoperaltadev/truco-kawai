@@ -1,6 +1,6 @@
 import { acceptCall, makeCall, rejectCall } from "@/domain/game/calls";
 import { acceptEnvido, callEnvido, rejectEnvido } from "@/domain/game/envido";
-import { createMatch, emptyEnvidoState } from "@/domain/game/match";
+import { createMatch, dealHand, emptyEnvidoState } from "@/domain/game/match";
 import { playCard } from "@/domain/game/play";
 import type { Card, MatchState, PlayCardCmd, Player } from "@/domain/game/types";
 
@@ -161,30 +161,54 @@ describe("envido + truco coexist round 1", () => {
 // ── Integration: truco reject with envido unresolved ─────────────────
 
 describe("truco reject with envido unresolved resolves envido first", () => {
-  it("envido resolved before truco rejection points", () => {
+  it("envido resolved before truco rejection points (defensive state)", () => {
     const rng = createSeededRng(42);
-    let state = createMatch({ players: [playerA, playerB], pointsToWin: 15, rng });
+    const baseState = createMatch({ players: [playerA, playerB], pointsToWin: 15, rng });
 
-    // A calls envido
-    const r1 = callEnvido(state, playerA.id, "envido");
-    expect(r1.ok).toBe(true);
-    if (!r1.ok) return;
-    state = r1.state;
+    // Manually construct a dual-pending state (unreachable via public API,
+    // but the defensive branch in rejectCall must handle it correctly).
+    // Set scores so envido rejection (1pt) brings team A close to winning.
+    const dualPendingState: MatchState = {
+      ...baseState,
+      teams: [
+        { id: "team-A", players: [playerA], score: 13 },
+        { id: "team-B", players: [playerB], score: 10 },
+      ],
+      currentTurn: playerB.id,
+      hand: {
+        ...baseState.hand,
+        callState: {
+          pendingCall: { caller: playerA.id, level: "truco", status: "pending" },
+          acceptedLevel: null,
+          history: [],
+        },
+        envidoState: {
+          pendingEnvido: { caller: playerA.id, level: "envido", status: "pending" },
+          acceptedLevel: null,
+          stake: 0,
+          resolved: false,
+          history: [],
+        },
+      },
+    };
 
-    // B does NOT accept/reject envido. Instead, A calls truco after B's turn passes...
-    // Actually, B must respond to envido. Let me think about this differently.
-    // The scenario is: envido pending AND truco pending simultaneously.
-    // In our design, only one can be pending at a time.
-    // So this scenario requires: envido called, then somehow truco also called.
-    // But our guards prevent this.
-    //
-    // The spec scenario says: "Given envido is pending and truco is also pending"
-    // This can only happen if the design allows both pending simultaneously.
-    // Since our design doesn't allow this, this integration test is not applicable.
-    //
-    // However, the rejectCall code DOES handle this case defensively.
-    // Let me test it by manually constructing the state.
-    expect(true).toBe(true); // placeholder
+    // B rejects truco → rejectCall should resolve envido first, then truco rejection
+    const result = rejectCall(dualPendingState, playerB.id);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const finalState = result.state;
+
+    // Envido rejection: caller (A) gets 1 point (stake 0 + 1) → 13 + 1 = 14
+    // Truco rejection: caller (A) gets callPoints(null) = 1 point → 14 + 1 = 15
+    // Total: 15 pts for team A, triggering matchOver
+    const teamA = finalState.teams.find((t) => t.id === `team-${playerA.id}`);
+    expect(teamA?.score).toBe(15);
+    expect(finalState.phase).toBe("matchOver");
+    expect(finalState.winner).toBe("team-A");
+
+    // If envido had NOT been resolved first, team A would only have 14 pts (13 + 1 for truco).
+    // The fact that team A has 15 pts proves envido was resolved before truco.
   });
 });
 
@@ -244,7 +268,6 @@ describe("dealHand resets envidoState", () => {
 
     // Play out the hand to trigger dealHand
     // For simplicity, just check that a new hand from dealHand has empty envidoState
-    const { dealHand } = require("@/domain/game/match");
     const newHand = dealHand(2, [playerA, playerB], rng);
     expect(newHand.envidoState).toEqual(emptyEnvidoState());
   });
