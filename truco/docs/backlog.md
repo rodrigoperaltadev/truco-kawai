@@ -79,14 +79,14 @@ The first version should prioritize:
 
 ## Phase 7 — Game table UI
 
-- [ ] Rebuild the Stitch game table as a proper RN Web screen.
-- [ ] Separate zones clearly: opponent, table, player hand, actions, score, log.
-- [ ] Ensure player has exactly 3 cards in hand.
-- [ ] Show played cards in the center without overlapping controls.
-- [ ] Add clear turn indicator.
-- [ ] Add disabled states for unavailable actions.
-- [ ] Add compact event log that never covers cards.
-- [ ] Validate mobile layout first.
+- [x] Rebuild the Stitch game table as a proper RN Web screen.
+- [x] Separate zones clearly: opponent, table, player hand, actions, score, log.
+- [x] Ensure player has exactly 3 cards in hand.
+- [x] Show played cards in the center without overlapping controls.
+- [x] Add clear turn indicator.
+- [x] Render only enabled action buttons.
+- [x] Add compact event log that never covers cards.
+- [x] Validate mobile layout first.
 - [ ] Add desktop layout after mobile is clear.
 
 ## Phase 8 — App screens
