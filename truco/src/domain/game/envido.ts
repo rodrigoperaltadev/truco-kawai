@@ -302,8 +302,8 @@ export function acceptEnvido(state: MatchState, responder: string): Result<Match
   const stateWithEnvido: MatchState = { ...state, hand: newHand };
 
   // Score and return turn to caller
-  const scored = scoreEnvido(stateWithEnvido, winnerId, awarded);
-  return { ok: true, state: { ...scored, currentTurn: pending.caller } };
+  const scored = scoreEnvido(stateWithEnvido, winnerId, awarded, pending.caller);
+  return { ok: true, state: scored };
 }
 
 /**
@@ -355,9 +355,9 @@ export function rejectEnvido(state: MatchState, responder: string): Result<Match
   const stateWithEnvido: MatchState = { ...state, hand: newHand };
 
   // Caller wins rejection points; turn goes to opponent (the ex-caller now plays)
-  const scored = scoreEnvido(stateWithEnvido, caller, awarded);
   const opponent = otherPlayer(state, responder);
-  return { ok: true, state: { ...scored, currentTurn: opponent } };
+  const scored = scoreEnvido(stateWithEnvido, caller, awarded, opponent);
+  return { ok: true, state: scored };
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────

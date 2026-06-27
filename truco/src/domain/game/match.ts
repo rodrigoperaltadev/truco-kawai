@@ -205,9 +205,14 @@ export function faltaPoints(state: MatchState, winnerTeamIdx: number): number {
 /**
  * Scores envido points mid-hand. Adds points to the winner's team score.
  * Sets matchOver if score >= pointsToWin. Does NOT deal a new hand.
- * Restores currentTurn to the opponent of the winner (so play can continue).
+ * If nextTurn is provided, uses it; otherwise defaults to the opponent of the winner.
  */
-export function scoreEnvido(state: MatchState, winnerId: string, points: number): MatchState {
+export function scoreEnvido(
+  state: MatchState,
+  winnerId: string,
+  points: number,
+  nextTurn?: string,
+): MatchState {
   const teamIdx = state.teams.findIndex((team) => {
     const player = team.players[0];
     return player !== undefined && player.id === winnerId;
@@ -243,14 +248,14 @@ export function scoreEnvido(state: MatchState, winnerId: string, points: number)
   }
 
   // Do NOT deal a new hand — envido resolves mid-hand.
-  // Set currentTurn to the opponent of the winner so play continues.
+  // Set currentTurn to nextTurn if provided, otherwise opponent of the winner.
   const opponent = state.hand.players.find((p) => p.playerId !== winnerId);
-  const nextTurn = opponent !== undefined ? opponent.playerId : state.currentTurn;
+  const defaultNextTurn = opponent !== undefined ? opponent.playerId : state.currentTurn;
 
   return {
     ...state,
     teams: updatedTeams,
-    currentTurn: nextTurn,
+    currentTurn: nextTurn ?? defaultNextTurn,
   };
 }
 
