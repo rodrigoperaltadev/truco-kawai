@@ -28,6 +28,10 @@ export function playCard(state: MatchState, cmd: PlayCardCmd): Result<MatchState
     return { ok: false, error: "CALL_PENDING" };
   }
 
+  if (state.hand.envidoState.pendingEnvido?.status === "pending") {
+    return { ok: false, error: "ENVIDO_CALL_PENDING" };
+  }
+
   if (cmd.playerId !== state.currentTurn) {
     return { ok: false, error: "OUT_OF_TURN" };
   }

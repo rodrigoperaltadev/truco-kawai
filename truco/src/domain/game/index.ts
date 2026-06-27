@@ -19,13 +19,26 @@ export type {
   PendingCall,
   CallHistoryEntry,
   CallState,
+  EnvidoLevel,
+  EnvidoAction,
+  PendingEnvido,
+  EnvidoHistoryEntry,
+  EnvidoState,
   GameError,
   PlayError,
   Result,
   CPUPlayer,
 } from "./types";
 
-export { createMatch, resolveMatch, dealHand } from "./match";
+export {
+  createMatch,
+  resolveMatch,
+  dealHand,
+  emptyCallState,
+  emptyEnvidoState,
+  faltaPoints,
+  scoreEnvido,
+} from "./match";
 
 export { startHandRoles, nextRoundLeader, currentTurn } from "./turn";
 
@@ -36,3 +49,14 @@ export { resolveHand } from "./hand";
 export { playCard } from "./play";
 
 export { makeCall, acceptCall, rejectCall, callPoints, nextLevel } from "./calls";
+
+export {
+  calcEnvidoPoints,
+  envidoCardValue,
+  levelPoints,
+  callEnvido,
+  acceptEnvido,
+  rejectEnvido,
+  isEnvidoWindowOpen,
+  isValidEnvidoLevel,
+} from "./envido";
