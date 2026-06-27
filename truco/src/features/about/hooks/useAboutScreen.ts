@@ -8,7 +8,9 @@ export function useAboutScreen() {
   const translations = useMemo(
     () => ({
       title: t("screens.about"),
-      subtitle: t("about.description"),
+      description: t("about.description"),
+      techStack: t("about.tech_stack"),
+      demoLinkPlaceholder: t("about.demo_link_placeholder"),
     }),
     [t],
   );
