@@ -71,11 +71,11 @@ The first version should prioritize:
 
 ## Phase 6 — Envido calls
 
-- [ ] Implement envido point calculation.
-- [ ] Model `envido`, `real envido`, and `falta envido`.
-- [ ] Implement accepted/rejected scoring.
-- [ ] Add tests for envido combinations and edge cases.
-- [ ] Decide whether flor is out of scope for MVP.
+- [x] Implement envido point calculation.
+- [x] Model `envido`, `real envido`, and `falta envido`.
+- [x] Implement accepted/rejected scoring.
+- [x] Add tests for envido combinations and edge cases.
+- [x] Decide whether flor is out of scope for MVP.
 
 ## Phase 7 — Game table UI
 
