@@ -220,7 +220,7 @@ describe("useGameState — opponent auto-play", () => {
     expect(playEntries.length).toBeGreaterThanOrEqual(2); // human + opponent
   });
 
-  it("does NOT auto-play when a call is pending", () => {
+  it("responds to a pending truco call instead of playing a card", () => {
     const { result } = renderGameHook();
 
     // Human calls truco → turn goes to opponent with pending call
@@ -230,14 +230,44 @@ describe("useGameState — opponent auto-play", () => {
 
     expect(result.current.view.isPlayerTurn).toBe(false);
     const opponentCardCountBefore = result.current.view.opponentCardCount;
+    const logLengthBefore = result.current.log.length;
 
-    // Advance timer — opponent should NOT play because call is pending
+    // Advance timer — opponent should respond (accept or reject), not play a card
     act(() => {
       jest.advanceTimersByTime(700);
     });
 
-    // Opponent card count unchanged
+    // Opponent card count unchanged — no card was played
     expect(result.current.view.opponentCardCount).toBe(opponentCardCountBefore);
+    // A response log entry was added
+    expect(result.current.log.length).toBeGreaterThan(logLengthBefore);
+    const responseEntry = result.current.log[logLengthBefore];
+    expect(responseEntry?.kind).toBe("callResponse");
+  });
+
+  it("responds to a pending envido call instead of playing a card", () => {
+    const { result } = renderGameHook();
+
+    // Human calls envido → turn goes to opponent with pending envido
+    act(() => {
+      result.current.handlers.onCallEnvido("envido");
+    });
+
+    expect(result.current.view.isPlayerTurn).toBe(false);
+    const opponentCardCountBefore = result.current.view.opponentCardCount;
+    const logLengthBefore = result.current.log.length;
+
+    // Advance timer — opponent should respond (accept or reject), not play a card
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    // Opponent card count unchanged — no card was played
+    expect(result.current.view.opponentCardCount).toBe(opponentCardCountBefore);
+    // A response log entry was added
+    expect(result.current.log.length).toBeGreaterThan(logLengthBefore);
+    const responseEntry = result.current.log[logLengthBefore];
+    expect(responseEntry?.kind).toBe("envidoResponse");
   });
 
   it("cleans up timer on state change", () => {
