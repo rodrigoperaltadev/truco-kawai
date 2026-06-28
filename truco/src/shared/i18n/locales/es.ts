@@ -41,6 +41,8 @@ export const es = {
     language: "Idioma",
     spanish: "Español",
     english: "English",
+    music_volume: "Volumen de música",
+    voice_volume: "Volumen de voces",
   },
   common: {
     back: "Volver",
@@ -48,5 +50,40 @@ export const es = {
   about: {
     description:
       "Truco Lab es un entrenador de Truco argentino construido con React Native Web para demostrar modelado de dominio, UI cross-platform y reglas testeables.",
+    demo_link_placeholder: "Demo disponible próximamente",
+    tech_stack: "Construido con React Native, Expo Router y TypeScript",
+  },
+  setup: {
+    points_to_win: "Puntos para ganar",
+    points_15: "15 puntos",
+    points_30: "30 puntos",
+    opponent: "Rival",
+    opponent_cpu: "CPU",
+    start: "Empezar",
+    player_turn: "Tu turno",
+  },
+  result: {
+    you_win: "¡Ganaste!",
+    cpu_wins: "Ganó la CPU",
+    final_score: "Marcador final",
+    play_again: "Jugar de nuevo",
+    back_to_menu: "Volver al menú",
+    loading: "Cargando resultado…",
+    empty: "No hay resultado guardado",
+  },
+  rules: {
+    title: "Reglas del Truco Argentino",
+    objective: "Objetivo",
+    suits: "Palos",
+    hierarchy: "Jerarquía de cartas",
+    truco_calls: "Cantos de Truco",
+    envido_points: "Puntos de Envido",
+    rounds: "Estructura de la mano",
+    flor_note: "La Flor no está incluida en esta versión",
+  },
+  ranking: {
+    title: "Jerarquía completa",
+    hierarchy_position: "Posición",
+    envido_value: "Valor Envido",
   },
 } as const;

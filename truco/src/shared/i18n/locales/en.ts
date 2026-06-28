@@ -41,6 +41,8 @@ export const en = {
     language: "Language",
     spanish: "Español",
     english: "English",
+    music_volume: "Music volume",
+    voice_volume: "Voice volume",
   },
   common: {
     back: "Back",
@@ -48,5 +50,40 @@ export const en = {
   about: {
     description:
       "Truco Lab is an Argentine Truco trainer built with React Native Web to demonstrate domain modeling, cross-platform UI, and testable game rules.",
+    demo_link_placeholder: "Demo coming soon",
+    tech_stack: "Built with React Native, Expo Router, and TypeScript",
+  },
+  setup: {
+    points_to_win: "Points to win",
+    points_15: "15 points",
+    points_30: "30 points",
+    opponent: "Opponent",
+    opponent_cpu: "CPU",
+    start: "Start game",
+    player_turn: "Your turn",
+  },
+  result: {
+    you_win: "You won!",
+    cpu_wins: "CPU wins",
+    final_score: "Final score",
+    play_again: "Play again",
+    back_to_menu: "Back to menu",
+    loading: "Loading result…",
+    empty: "No saved result",
+  },
+  rules: {
+    title: "Argentine Truco Rules",
+    objective: "Objective",
+    suits: "Suits",
+    hierarchy: "Card hierarchy",
+    truco_calls: "Truco calls",
+    envido_points: "Envido points",
+    rounds: "Hand structure",
+    flor_note: "Flor is not included in this version",
+  },
+  ranking: {
+    title: "Full hierarchy",
+    hierarchy_position: "Position",
+    envido_value: "Envido value",
   },
 } as const;

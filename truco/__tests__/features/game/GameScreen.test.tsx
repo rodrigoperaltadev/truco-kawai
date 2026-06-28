@@ -1,3 +1,13 @@
+// Mock expo-router
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+  useLocalSearchParams: () => ({}),
+}));
+
 import { GameScreen } from "@/features/game/GameScreen";
 import { render } from "../../helpers/render";
 

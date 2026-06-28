@@ -135,13 +135,15 @@ The first version should prioritize:
 - [ ] Add portfolio case study: problem, constraints, architecture, tradeoffs.
 - [ ] Record short demo GIF/video.
 
-## Known issues from Stitch export
+## Known issues / future improvements
 
 - [ ] Current table is visually confusing and overlaps important UI.
 - [ ] Current suit visuals are inaccurate: espada/basto/copa/oro must not look like poker suits.
 - [ ] Current cards look like generic kawaii cards, not Spanish deck cards.
 - [ ] Current layout needs stronger hierarchy before implementation.
 - [ ] Generated HTML should be treated as visual reference, not production architecture.
+- [ ] Game table UI needs visual polish to match the Stitch design reference (colors, spacing, card style, kawaii feel).
+- [ ] Envido flow should be turn-based with speech bubbles (comic-style) and manual point declaration: "Envido" → "Quiero" → "28" → "30" → "Son buenas".
 
 ## MVP definition
 

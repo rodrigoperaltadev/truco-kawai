@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo } from "react";
 import { View } from "react-native";
 
+import type { PointsToWin } from "@/domain/game/types";
 import { useTheme } from "@/shared/theme/ThemeProvider";
 import { Screen } from "@/shared/ui/Screen";
 
@@ -13,33 +16,69 @@ import { ScoreHeader } from "./components/ScoreHeader";
 import { TableZone } from "./components/TableZone";
 import { useGameState } from "./hooks/useGameState";
 
-// ── Temporary match options (will come from navigation params) ──────
+export type LastResult = {
+  isPlayerWin: boolean;
+  nosScore: number;
+  ellosScore: number;
+  pointsToWin: PointsToWin;
+};
 
-const TEMP_PLAYERS = [
-  { id: "human", name: "Vos" },
-  { id: "cpu", name: "Rival" },
-] as const;
+const LAST_RESULT_KEY = "@truco/last-result";
 
 export function GameScreen() {
   const theme = useTheme();
   const styles = createGameScreenStyles(theme);
+  const router = useRouter();
+  const params = useLocalSearchParams<{ pointsToWin?: string; opponentId?: string }>();
+
+  const pointsToWin: PointsToWin = params.pointsToWin === "30" ? 30 : 15;
+  const opponentId = params.opponentId === "cpu" ? "cpu" : "cpu";
+
+  const players = useMemo(
+    () =>
+      [
+        { id: "human", name: "Vos" },
+        { id: opponentId, name: "CPU" },
+      ] as const,
+    [opponentId],
+  );
 
   const { view, actions, handlers, log } = useGameState({
-    players: [TEMP_PLAYERS[0], TEMP_PLAYERS[1]],
-    pointsToWin: 15,
+    players: [players[0], players[1]],
+    pointsToWin,
     playerId: "human",
   });
 
+  // Match-over side effect: persist result and navigate to /result
+  useEffect(() => {
+    if (view.phase !== "matchOver") return;
+
+    const isPlayerWin = view.scores.nos > view.scores.ellos;
+    const result: LastResult = {
+      isPlayerWin,
+      nosScore: view.scores.nos,
+      ellosScore: view.scores.ellos,
+      pointsToWin,
+    };
+
+    AsyncStorage.setItem(LAST_RESULT_KEY, JSON.stringify(result))
+      .then(() => {
+        router.replace("/result");
+      })
+      .catch(() => {
+        // If storage fails, still navigate
+        router.replace("/result");
+      });
+  }, [view.phase, view.scores.nos, view.scores.ellos, pointsToWin, router]);
+
   const playerNameFn = useMemo(() => {
-    const players = TEMP_PLAYERS;
     return (playerId: string) => {
       const p = players.find((pl) => pl.id === playerId);
       return p?.name ?? playerId;
     };
-  }, []);
+  }, [players]);
 
-  const opponentName =
-    view.turnLabel.kind === "opponent" ? view.turnLabel.name : TEMP_PLAYERS[1].name;
+  const opponentName = view.turnLabel.kind === "opponent" ? view.turnLabel.name : players[1].name;
 
   return (
     <Screen scrollable testID="game-screen">

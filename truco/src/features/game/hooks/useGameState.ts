@@ -304,13 +304,22 @@ export function useGameState(opts: UseGameStateOptions) {
     const ms = matchState;
     if (ms.currentTurn !== opponentId) return;
     if (ms.phase === "matchOver") return;
-    if (ms.hand.callState.pendingCall?.status === "pending") return;
-    if (ms.hand.envidoState.pendingEnvido?.status === "pending") return;
-
-    const opponentHand = ms.hand.players.find((p) => p.playerId === opponentId);
-    if (!opponentHand || opponentHand.cards.length === 0) return;
 
     const timer = setTimeout(() => {
+      // Respond to pending calls first
+      if (ms.hand.callState.pendingCall?.status === "pending") {
+        dispatch(Math.random() < 0.7 ? { type: "ACCEPT" } : { type: "REJECT" });
+        return;
+      }
+      if (ms.hand.envidoState.pendingEnvido?.status === "pending") {
+        dispatch(Math.random() < 0.7 ? { type: "ACCEPT" } : { type: "REJECT" });
+        return;
+      }
+
+      // Otherwise play a random card
+      const opponentHand = ms.hand.players.find((p) => p.playerId === opponentId);
+      if (!opponentHand || opponentHand.cards.length === 0) return;
+
       const cards = opponentHand.cards;
       const idx = Math.floor(Math.random() * cards.length);
       const card = cards[idx];
