@@ -91,14 +91,14 @@ The first version should prioritize:
 
 ## Phase 8 — App screens
 
-- [ ] Main menu.
-- [ ] New game setup.
-- [ ] Game table.
-- [ ] Rules/tutorial.
-- [ ] Card ranking reference.
-- [ ] Match result.
-- [ ] Settings.
-- [ ] About/portfolio explanation screen.
+- [x] Main menu.
+- [x] New game setup.
+- [x] Game table.
+- [x] Rules/tutorial.
+- [x] Card ranking reference.
+- [x] Match result.
+- [x] Settings.
+- [x] About/portfolio explanation screen.
 
 ## Phase 9 — CPU opponent
 
